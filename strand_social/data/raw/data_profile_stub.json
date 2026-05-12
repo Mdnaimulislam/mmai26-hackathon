@@ -1,0 +1,50 @@
+{
+  "$schema": "https://omaib.github.io/omaib-contracts/schemas/data_profile.schema.json",
+  "adapter_id": "dap-carbon-neutral-living",
+  "dataset_name": "Smart Social Housing Synthetic \u2014 Hackathon Starter",
+  "version": "0.1.0-hackathon",
+  "license": "CC BY 4.0",
+  "access_tier": "open",
+  "modalities": [
+    "time_series",
+    "tabular",
+    "property_metadata",
+    "daily_aggregates"
+  ],
+  "n_households": 120,
+  "n_timesteps": 2160,
+  "sampling_rate": "1h",
+  "daily_aggregation": {
+    "columns": ["avgTemperature", "avgHumidity", "avgCo2"],
+    "broadcast": "constant per (household_id, year, month, day)"
+  },
+  "property_metadata": {
+    "columns": ["reference", "Sub-building", "address", "postcode"],
+    "constant_per": "household_id"
+  },
+  "missing_data": {
+    "smart_meter_kwh": 0.026,
+    "indoor_temp_c": 0.065,
+    "co2_ppm": 0.09,
+    "noise_db": 0.14,
+    "survey_thermal_comfort": 0.98,
+    "avgCo2": 0.24
+  },
+  "deliberate_flaws": [
+    "timestamp_drift_30pct",
+    "per_household_variable_dropout",
+    "sparse_survey",
+    "reference_format_mix",
+    "sub_building_blanks",
+    "address_format_variation",
+    "daily_avg_co2_outages"
+  ],
+  "tasks": [
+    "energy_forecasting",
+    "sensor_alignment_qa",
+    "benchmark_split_generation",
+    "metadata_normalisation",
+    "coverage_equity_audit"
+  ],
+  "notes": "Synthetic only. Real equivalent: IDEAL dataset (UK GDPR, ethics approval required)."
+}

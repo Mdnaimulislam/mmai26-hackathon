@@ -1,0 +1,82 @@
+{
+  "schema": "omaib-housing-v0.1",
+  "card_name": "Smart Social Housing Forecasting Benchmark",
+  "version": "0.1.0-hackathon",
+  "authors": [
+    "<your team name here>"
+  ],
+  "dataset": {
+    "name": "Smart Social Housing Synthetic \u2014 Hackathon Starter",
+    "n_households": 120,
+    "n_rows_total": 86520,
+    "modalities": [
+      "smart_meter_kwh",
+      "indoor_temp_c",
+      "co2_ppm",
+      "noise_db",
+      "survey_thermal_comfort",
+      "avgTemperature",
+      "avgHumidity",
+      "avgCo2",
+      "reference",
+      "Sub-building",
+      "address",
+      "postcode"
+    ],
+    "known_flaws_quantified": {
+      "avgCo2_missing_fraction": 0.2342,
+      "sub_building_blank_pct": 0.2083
+    }
+  },
+  "model": {
+    "type": "household-type mean baseline",
+    "overall_MAE_kwh": 0.129,
+    "overall_RMSE_kwh": 0.164,
+    "overall_MBE_kwh": 0.047
+  },
+  "equity_report": {
+    "dimensions_tested": [
+      "property_type",
+      "n_residents",
+      "month",
+      "postcode_area",
+      "reference_type"
+    ],
+    "worst_group": "flat",
+    "worst_group_MBE_kwh": 0.15,
+    "statistically_significant": true,
+    "p_value": 1e-300,
+    "t_statistic": 128.078,
+    "extra_findings": {
+      "postcode_area": "TODO: worst area + MBE from Step 4",
+      "reference_type": "TODO: structured vs free-text MBE from Step 4"
+    }
+  },
+  "coverage_equity": {
+    "metric": "avgCo2_missing_fraction",
+    "overall": 0.2342,
+    "by_property_type": {},
+    "by_reference_type": {},
+    "concern_threshold": 0.25,
+    "notes": "Groups exceeding the threshold are at higher risk of being under-modelled because their environmental signal is sparse."
+  },
+  "known_limitations": [
+    "Survey response rate is only 2% \u2014 thermal comfort cannot be used as a fairness signal alone",
+    "Timestamp drift affects ~30% of households",
+    "120 households is small \u2014 confidence intervals on equity findings are wide",
+    "reference column mixes structured IDs and free-text \u2014 normalise before joining external records",
+    "Sub-building is blank for a meaningful fraction of properties",
+    "avgCo2 has multi-day outages on some properties \u2014 confirm before using it as a model input"
+  ],
+  "verdict": "CONDITIONAL",
+  "recommended_uses": [
+    "Use ONLY with stratified evaluation by property_type, postcode_area, and reference_type",
+    "Flag the under-forecast bias for flats in any downstream policy use",
+    "Re-train with balanced property_type and postcode_area sampling"
+  ],
+  "do_not_use_for": [
+    "Direct fuel-poverty risk scoring without group-stratified validation",
+    "Real housing eligibility decisions",
+    "Any application without a coverage-equity audit of avgCo2"
+  ]
+}
