@@ -1,0 +1,170 @@
+{
+  "schema_version": "omaib-clinical",
+  "report_type": "model_safety_report",
+  "strand": "clinical",
+  "hackathon": "MultimodalAI26",
+  "evaluation_date": "",
+  "team": {
+    "name": "",
+    "members": ""
+  },
+  "models": [
+    {
+      "name": "model_a",
+      "label": "Your model name A",
+      "verdict": "",
+      "conditions": "",
+      "narrative": "",
+      "metrics": {
+        "auroc": 0.0,
+        "auprc": 0.0,
+        "brier_score": 0.0,
+        "sensitivity": 0.0,
+        "specificity": 0.0,
+        "ppv": 0.0,
+        "npv": 0.0,
+        "f1": 0.0,
+        "threshold": 0.5,
+        "n_total": 0,
+        "n_positive": 0
+      },
+      "subgroup_gaps": {
+        "age_under_65": 0.0,
+        "age_65_to_74": 0.0,
+        "age_75_plus": 0.0
+      },
+      "deployment_questions": {
+        "q1_miss_rate": "",
+        "q2_alert_precision": "",
+        "q3_clearance_safety": "",
+        "q4_discrimination": "",
+        "q5_calibration": ""
+      },
+      "failure_analysis": {
+        "who_is_missed": "",
+        "false_alarm_profile": "",
+        "feature_importance_interpretation": "",
+        "model_disagreement": ""
+      },
+      "option_specific": {
+        "type": "",
+        "title": "",
+        "content": ""
+      },
+      "explainability": {
+        "output_type": "",
+        "description": ""
+      },
+      "failure_catalogue": [
+        { "mode": "", "example": "", "subgroup": "" },
+        { "mode": "", "example": "", "subgroup": "" },
+        { "mode": "", "example": "", "subgroup": "" }
+      ]
+    },
+    {
+      "name": "model_b",
+      "label": "Your model name B",
+      "verdict": "",
+      "conditions": "",
+      "narrative": "",
+      "metrics": {
+        "auroc": 0.0,
+        "auprc": 0.0,
+        "brier_score": 0.0,
+        "sensitivity": 0.0,
+        "specificity": 0.0,
+        "ppv": 0.0,
+        "npv": 0.0,
+        "f1": 0.0,
+        "threshold": 0.5,
+        "n_total": 0,
+        "n_positive": 0
+      },
+      "subgroup_gaps": {
+        "age_under_65": 0.0,
+        "age_65_to_74": 0.0,
+        "age_75_plus": 0.0
+      },
+      "deployment_questions": {
+        "q1_miss_rate": "",
+        "q2_alert_precision": "",
+        "q3_clearance_safety": "",
+        "q4_discrimination": "",
+        "q5_calibration": ""
+      },
+      "failure_analysis": {
+        "who_is_missed": "",
+        "false_alarm_profile": "",
+        "feature_importance_interpretation": "",
+        "model_disagreement": ""
+      },
+      "option_specific": {
+        "type": "",
+        "title": "",
+        "content": ""
+      },
+      "explainability": {
+        "output_type": "",
+        "description": ""
+      },
+      "failure_catalogue": [
+        { "mode": "", "example": "", "subgroup": "" },
+        { "mode": "", "example": "", "subgroup": "" },
+        { "mode": "", "example": "", "subgroup": "" }
+      ]
+    },
+    {
+      "name": "model_c",
+      "label": "Your model name C",
+      "verdict": "",
+      "conditions": "",
+      "narrative": "",
+      "metrics": {
+        "auroc": 0.0,
+        "auprc": 0.0,
+        "brier_score": 0.0,
+        "sensitivity": 0.0,
+        "specificity": 0.0,
+        "ppv": 0.0,
+        "npv": 0.0,
+        "f1": 0.0,
+        "threshold": 0.5,
+        "n_total": 0,
+        "n_positive": 0
+      },
+      "subgroup_gaps": {
+        "age_under_65": 0.0,
+        "age_65_to_74": 0.0,
+        "age_75_plus": 0.0
+      },
+      "deployment_questions": {
+        "q1_miss_rate": "",
+        "q2_alert_precision": "",
+        "q3_clearance_safety": "",
+        "q4_discrimination": "",
+        "q5_calibration": ""
+      },
+      "failure_analysis": {
+        "who_is_missed": "",
+        "false_alarm_profile": "",
+        "feature_importance_interpretation": "",
+        "model_disagreement": ""
+      },
+      "option_specific": {
+        "type": "",
+        "title": "",
+        "content": ""
+      },
+      "explainability": {
+        "output_type": "",
+        "description": ""
+      },
+      "failure_catalogue": [
+        { "mode": "", "example": "", "subgroup": "" },
+        { "mode": "", "example": "", "subgroup": "" },
+        { "mode": "", "example": "", "subgroup": "" }
+      ]
+    }
+  ],
+  "overall_notes": ""
+}

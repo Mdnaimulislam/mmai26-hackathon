@@ -1,0 +1,86 @@
+{
+  "schema_version": "omaib-clinical",
+  "submission_type": "model_safety_report",
+  "strand": "clinical",
+  "hackathon": "MultimodalAI26",
+  "submitted": "",
+  "team": {
+    "name": "",
+    "members": ""
+  },
+  "models": [
+    {
+      "name": "Your model name A ",
+      "verdict": "e.g. APPROVE, CONDITIONAL, or NOT APPROVED",
+      "conditions": "",
+      "narrative": "",
+      "metrics": {
+        "auroc": 0.0,
+        "auprc": 0.0,
+        "brier_score": 0.0,
+        "sensitivity": 0.0,
+        "specificity": 0.0,
+        "ppv": 0.0,
+        "npv": 0.0,
+        "f1": 0.0,
+        "threshold": 0.5,
+        "n_total": 0,
+        "n_positive": 0
+      },
+      "subgroup_gaps": {
+        "under_65": 0.0,
+        "65_to_74": 0.0,
+        "75_plus": 0.0
+      }
+    },
+    {
+      "name": "Your model name B",
+      "verdict": "e.g. APPROVE, CONDITIONAL, or NOT APPROVED",
+      "conditions": "",
+      "narrative": "",
+      "metrics": {
+        "auroc": 0.0,
+        "auprc": 0.0,
+        "brier_score": 0.0,
+        "sensitivity": 0.0,
+        "specificity": 0.0,
+        "ppv": 0.0,
+        "npv": 0.0,
+        "f1": 0.0,
+        "threshold": 0.5,
+        "n_total": 0,
+        "n_positive": 0
+      },
+      "subgroup_gaps": {
+        "under_65": 0.0,
+        "65_to_74": 0.0,
+        "75_plus": 0.0
+      }
+    },
+    {
+      "name": "Model C — Your Implementation",
+      "verdict": "",
+      "conditions": "",
+      "narrative": "",
+      "metrics": {
+        "auroc": 0.0,
+        "auprc": 0.0,
+        "brier_score": 0.0,
+        "sensitivity": 0.0,
+        "specificity": 0.0,
+        "ppv": 0.0,
+        "npv": 0.0,
+        "f1": 0.0,
+        "threshold": 0.5,
+        "n_total": 0,
+        "n_positive": 0
+      },
+      "subgroup_gaps": {
+        "under_65": 0.0,
+        "65_to_74": 0.0,
+        "75_plus": 0.0
+      }
+    }
+  ],
+  "overall_notes": ""
+}
