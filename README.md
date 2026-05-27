@@ -1,16 +1,23 @@
-# Housing Strand — Quick Start
+# Housing Strand — Can You Trust a Dataset Used for Housing Decisions?
 
-**MultimodalAI'26 Hackathon · Can you trust a dataset used for housing decisions?**
+**MultimodalAI'26 Hackathon · 10 June 2026**
 
 ---
 
-## Setup
+## Read this first
 
-```bash
-pip install -r requirements.txt
-```
+Read **[STRAND_GUIDE.md](STRAND_GUIDE.md)** for the full challenge brief, track roles, design questions, and what your team must produce.
 
-> **Do not use Google Colab.** The Streamlit app reads saved models and processed data from your local `saved_models/` and `data/processed/` directories. Run everything locally in VS Code with the Jupyter extension or JupyterLab.
+---
+
+## What is provided
+
+| Path | Contents |
+|---|---|
+| `data/raw/housing_properties_daily.csv` | Sensor readings and property metadata for 120 properties over 730 days |
+| `reference/omaib_pathway.json` | Housing manifest template — fill in your team's models and verdicts |
+| `reference/housing_benchmark_card.json` | Full Housing Benchmark Card template |
+| `validate_submission.py` | Pre-submission validator — run before committing your JSON files |
 
 ---
 
@@ -24,40 +31,20 @@ All your work goes on your team branch. **Do not commit directly to the housing 
 
 ---
 
-## Three phases — all tracks active from minute zero
+## Setup
 
-| | Phase 1 — Build (60 min) | Phase 2 — Train (45 min) | Phase 3 — Evaluate & Report (90 min) |
-|---|---|---|---|
-| **Sensor Inspector** | `00_sensor_audit.ipynb` | Verify Tab 1 | Tab 5 — Benchmark Card |
-| **Split Builder** | `01_split_and_features.ipynb` | **Run `02_train_models.ipynb`** (train all 3 models) | Tabs 1–2 + Tab 5 |
-| **Equity Analyst** | Implement `model_b.py` + `model_c.py` + `evaluate.py` | Review training outputs | Tabs 3–4 + Tab 5 |
-
-**Phase 1 is fully parallel** — all three tracks start immediately and have no dependencies on each other.
-**Phase 2 is the handoff** — Equity Analyst's model implementations + Split Builder's splits → training runs.
-**Phase 3 is the app** — all three tracks converge at Tab 5 to produce the Housing Benchmark Card.
-
-Read `STRAND_GUIDE.md` for the full task description, design briefs, and track roles.
-
----
-
-## What you implement
-
-| File | Task | Phase | Track |
-|---|---|---|---|
-| `models/model_b.py` | Seasonal Logistic Regression — encoding and feature choices | 1 | Equity Analyst |
-| `models/model_c.py` | CO₂-dependent LR — MNAR strategy choice | 1 | Equity Analyst |
-| `src/evaluate.py` | Classification metrics, subgroup analysis, equity gap | 1 | Equity Analyst |
-
-`models/model_a.py` is provided complete. Do not modify it.
-
----
-
-## Launch the evaluation app
-
-After running both notebooks:
+Install the packages your team's models require. At minimum:
 
 ```bash
-streamlit run app.py
+pip install pandas scikit-learn matplotlib seaborn
+```
+
+---
+
+## Validate your submission before committing
+
+```bash
+python validate_submission.py
 ```
 
 ---
