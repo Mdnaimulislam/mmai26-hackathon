@@ -5,8 +5,8 @@
 | Field | Value |
 |---|---|
 | **File** | `icu_patients.csv` |
-| **Patients** | 2,000 synthetic post-surgical ICU patients |
-| **Rows** | 2,000 (one per patient) |
+| **Patients** | 5,000 synthetic post-surgical ICU patients |
+| **Rows** | 5,000 (one per patient) |
 | **Columns** | 182 |
 
 ---
@@ -15,8 +15,8 @@
 
 | Column | Type | Rate | Description |
 |---|---|---|---|
-| `deteriorated_24h` | int | **42.3 %** | Primary target — patient deteriorated within 24 h in ICU |
-| `major_complication_30d` | int | **28.2 %** | Secondary target — major complication within 30 days post-surgery |
+| `deteriorated_24h` | int | **42.0 %** | Primary target — patient deteriorated within 24 h in ICU |
+| `major_complication_30d` | int | **30.0 %** | Secondary target — major complication within 30 days post-surgery |
 
 Both outcomes are present for every patient. The strand's primary target is **`deteriorated_24h`**.
 
@@ -28,7 +28,7 @@ Both outcomes are present for every patient. The strand's primary target is **`d
 
 | Column | Type | NaN | Description |
 |---|---|---|---|
-| `patient_id` | str | 0 | Unique ID (P0001–P2000) |
+| `patient_id` | str | 0 | Unique ID (P0001–P5000) |
 | `age` | int | 0 | Age in years (25–92, mean ≈ 63) |
 | `sex` | str | 0 | `M` or `F` |
 | `sex_enc` | int | 0 | 1 = female, 0 = male |
@@ -37,18 +37,18 @@ Both outcomes are present for every patient. The strand's primary target is **`d
 
 | Column | Type | NaN | Description |
 |---|---|---|---|
-| `surgery_type` | str | 0 | `cardiac` (408), `vascular` (413), `abdominal` (686), `orthopaedic` (493) |
+| `surgery_type` | str | 0 | `cardiac` (1,033), `vascular` (1,007), `abdominal` (1,727), `orthopaedic` (1,233) |
 | `surgery_enc` | int | 0 | Ordinal: cardiac=3, vascular=2, abdominal=1, orthopaedic=0 |
-| `admission_urgency` | str | 0 | `elective` (1544) or `emergency` (456) |
+| `admission_urgency` | str | 0 | `elective` (3,835) or `emergency` (1,165) |
 | `urgency_enc` | int | 0 | 1 = emergency, 0 = elective |
-| `asa_class` | int | 0 | ASA physical status 1–4 (1=168, 2=999, 3=766, 4=67) |
+| `asa_class` | int | 0 | ASA physical status 1–4 (1=400, 2=2,561, 3=1,876, 4=163) |
 | `op_duration_h` | float | 0 | Operation duration in hours |
 
 ### 3. Intra-operative (cols 11–14)
 
 | Column | Type | NaN | Description |
 |---|---|---|---|
-| `blood_loss_ml` | float | **714 (35.7 %)** | Estimated blood loss (mL). **MNAR** — see below |
+| `blood_loss_ml` | float | **1,755 (35.1 %)** | Estimated blood loss (mL). **MNAR** — see below |
 | `blood_loss_imputed` | float | 0 | `blood_loss_ml` with training-set mean filled where missing |
 | `blood_loss_missing` | int | 0 | 1 = blood loss was not recorded |
 | `transfused` | int | 0 | 1 = intra-operative blood transfusion |
@@ -103,7 +103,7 @@ Derived from the hourly series (see Section 9). Present as summary statistics fo
 | Column | Type | NaN | Description |
 |---|---|---|---|
 | `has_notes` | int | 0 | 1 = a clinical note exists for this patient |
-| `note_risk_score` | float | **631 (31.6 %)** | Pre-extracted NLP risk score (0–1). **NaN when `has_notes == 0`** |
+| `note_risk_score` | float | **1,582 (31.6 %)** | Pre-extracted NLP risk score (0–1). **NaN when `has_notes == 0`** |
 | `icu_hours` | int | 0 | Total hours in ICU before step-down or event |
 
 ### 10. Outcomes (cols 36–37)
@@ -114,7 +114,7 @@ See [Outcomes](#outcomes) above.
 
 | Column | Type | NaN | Description |
 |---|---|---|---|
-| `note_text` | str | **631 (31.6 %)** | Synthetic clinician narrative (100–200 words). NaN when `has_notes == 0` |
+| `note_text` | str | **1,582 (31.6 %)** | Synthetic clinician narrative (100–200 words). NaN when `has_notes == 0` |
 
 Source: `notes.csv`, left-joined on `patient_id`.
 
@@ -131,9 +131,9 @@ Six vitals × 24 hours = 144 columns. Column naming: `{vital}_h{HH}` where HH is
 | Temperature | `temp_h00` – `temp_h23` | °C | Hourly body temperature |
 | Lactate | `lactate_h00` – `lactate_h23` | mmol/L | Hourly serum lactate |
 
-No NaN values in any hourly column (all 2,000 patients have complete 24-hour vitals).
+No NaN values in any hourly column (all 5,000 patients have complete 24-hour vitals).
 
-Source: `vitals_series.csv` (48,000 rows), pivoted with `pandas.pivot()`.
+Source: `vitals_series.csv` (120,000 rows), pivoted with `pandas.pivot()`.
 
 ---
 
@@ -141,12 +141,12 @@ Source: `vitals_series.csv` (48,000 rows), pivoted with `pandas.pivot()`.
 
 Two variables have significant non-random missingness. The patterns and rates below are as observed in the data.
 
-### Blood loss MNAR (35.7 % missing)
+### Blood loss MNAR (35.1 % missing)
 
 `blood_loss_ml` is absent when documentation was not completed. Missingness is driven by case complexity:
 
-- Cardiac surgery: highest missing rate (~45 %)
-- Vascular surgery: elevated missing rate (~38 %)
+- Cardiac surgery: highest missing rate (~58 %)
+- Vascular surgery: elevated missing rate (~45 %)
 - Emergency admissions: elevated relative to elective
 
 A `blood_loss_missing` indicator column (0/1) is provided alongside `blood_loss_imputed` (training-set mean fill).
@@ -167,8 +167,8 @@ import pandas as pd
 
 df = pd.read_csv('data/raw/icu_patients.csv')
 
-assert df.shape == (2000, 182),          f"Expected (2000, 182), got {df.shape}"
-assert df['patient_id'].nunique() == 2000
+assert df.shape == (5000, 182),          f"Expected (5000, 182), got {df.shape}"
+assert df['patient_id'].nunique() == 5000
 assert abs(df['deteriorated_24h'].mean() - 0.42) < 0.05,  "Deterioration rate out of range"
 assert abs(df['major_complication_30d'].mean() - 0.28) < 0.05
 assert df['blood_loss_missing'].mean() > 0.30,             "Blood loss MNAR rate too low"

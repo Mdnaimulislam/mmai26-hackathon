@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Patients** | 2,000 synthetic post-surgical ICU patients |
-| **Primary file** | `raw/icu_patients.csv` — 2,000 rows × 182 columns |
-| **Primary outcome** | `deteriorated_24h` — 1 = ICU deterioration within 24 h (42.3 %) |
-| **Secondary outcome** | `major_complication_30d` — 1 = major complication within 30 days (28.2 %) |
+| **Patients** | 5,000 synthetic post-surgical ICU patients |
+| **Primary file** | `raw/icu_patients.csv` — 5,000 rows × 182 columns |
+| **Primary outcome** | `deteriorated_24h` — 1 = ICU deterioration within 24 h (42.0 %) |
+| **Secondary outcome** | `major_complication_30d` — 1 = major complication within 30 days (30.0 %) |
 | **Modalities** | Tabular (37 cols) + free-text clinical notes + 24-hour hourly vitals series |
 | **Full column reference** | `raw/DATASET_CARD.md` |
 
@@ -18,7 +18,7 @@
 ```
 data/
 └── raw/
-    ├── icu_patients.csv   ← PRIMARY FILE (2,000 × 182, use this)
+    ├── icu_patients.csv   ← PRIMARY FILE (5,000 × 182, use this)
     └── DATASET_CARD.md               ← full column dictionary + verification code
 ```
 ---
@@ -31,19 +31,19 @@ import pandas as pd
 df = pd.read_csv('data/raw/icu_patients.csv')
 
 # Verify load
-assert df.shape == (2000, 182)
-print(df['deteriorated_24h'].mean())      # 0.423
+assert df.shape == (5000, 182)
+print(df['deteriorated_24h'].mean())      # 0.420
 print(df['has_notes'].mean())             # 0.684
 print(df['blood_loss_missing'].mean())    # 0.357
 
 # Tabular features (first 37 columns, no time series)
 tabular = df.iloc[:, :37]
 
-# Hourly vitals as 3-D array: shape (2000, 24, 6)
+# Hourly vitals as 3-D array: shape (5000, 24, 6)
 import numpy as np
 vitals_order = ['hr', 'rr', 'spo2', 'sbp', 'temp', 'lactate']
 vitals_wide  = df[[f'{v}_h{h:02d}' for v in vitals_order for h in range(24)]]
-vitals_3d    = vitals_wide.values.reshape(2000, 6, 24).transpose(0, 2, 1)
+vitals_3d    = vitals_wide.values.reshape(5000, 6, 24).transpose(0, 2, 1)
 ```
 
 ---
@@ -77,10 +77,10 @@ See `raw/DATASET_CARD.md` for the full column dictionary with types, NaN counts,
 
 | Surgery type | Missing rate |
 |---|---|
-| Cardiac | 57.8 % |
-| Vascular | 46.2 % |
-| Abdominal | 25.4 % |
-| Orthopaedic | 22.9 % |
+| Cardiac | 58.4 % |
+| Vascular | 44.6 % |
+| Abdominal | 24.9 % |
+| Orthopaedic | 22.1 % |
 
 Investigate how the missingness pattern relates to patient risk and whether your imputation strategy affects model performance for these subgroups.
 
@@ -90,10 +90,10 @@ Investigate how the missingness pattern relates to patient risk and whether your
 
 | Surgery type | Notes absent |
 |---|---|
-| Cardiac | 60.8 % |
-| Vascular | 48.4 % |
-| Abdominal | 17.6 % |
-| Orthopaedic | 12.6 % |
+| Cardiac | 61.4 % |
+| Vascular | 48.1 % |
+| Abdominal | 17.3 % |
+| Orthopaedic | 13.5 % |
 
 Investigate how the absence pattern relates to patient acuity and whether your handling of missing `note_risk_score` values affects model performance in the `has_notes == 0` subgroup.
 
@@ -103,9 +103,9 @@ Vascular surgery patients tend to receive tight post-operative haemodynamic mana
 
 | | Vascular | All others |
 |---|---|---|
-| `hr_mean` | 70.0 bpm | 80.5 bpm |
+| `hr_mean` | 70.0 bpm | 80.4 bpm |
 | `sbp_mean` | 130.1 mmHg | 122.1 mmHg |
-| `icu_lactate` | 0.94 mmol/L | 2.48 mmol/L |
+| `icu_lactate` | 0.93 mmol/L | 2.51 mmol/L |
 
 Examine whether this vital sign profile affects model performance for vascular patients relative to other surgery types.
 
@@ -115,27 +115,27 @@ The hourly lactate trajectory (columns `lactate_h00`–`lactate_h23`) may carry 
 
 ### 5 — Age and silent deterioration
 
-Mean age ≈ 62.6 years (SD 13.7). About **19.3 %** of patients are aged 75+.
+Mean age ≈ 62.4 years (SD 13.6). About **19.4 %** of patients are aged 75+.
 
 | Age band | n | Deterioration rate |
 |---|---|---|
-| Under 65 | 1,147 | 35.8 % |
-| 65–74 | 511 | 47.6 % |
-| 75+ | 342 | 56.1 % |
+| Under 65 | 2,812 | 39.7 % |
+| 65–74 | 1,220 | 43.0 % |
+| 75+ | 968 | 47.5 % |
 
 Elderly patients deteriorate without alarming vital signs (blunted tachycardia in patients on beta-blockers). Subgroup analysis by age band is a required deliverable for the Evidence Dashboard.
 
 ### 6 — Deterioration prevalence by subgroup
 
-Overall deterioration rate is **42.3 %**.
+Overall deterioration rate is **42.0 %**.
 
 | Subgroup | Deterioration rate |
 |---|---|
-| Cardiac surgery | 74.8 % |
-| Emergency admissions | 69.1 % |
-| Vascular surgery | 42.4 % |
-| Abdominal surgery | 36.6 % |
-| Elective admissions | 34.4 % |
-| Orthopaedic surgery | 23.3 % |
+| Cardiac surgery | 74.3 % |
+| Emergency admissions | 68.3 % |
+| Vascular surgery | 41.4 % |
+| Abdominal surgery | 36.7 % |
+| Elective admissions | 34.0 % |
+| Orthopaedic surgery | 22.9 % |
 
 These gaps suggest that aggregate performance metrics alone may not capture how the model performs across different patient groups.

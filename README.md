@@ -15,7 +15,7 @@ should be trusted — and under what conditions.
 ```bash
 pip install -r requirements.txt
 python -c "import pandas as pd; df = pd.read_csv('data/raw/icu_patients.csv'); print(df.shape, round(df['deteriorated_24h'].mean(), 3))"
-# expect: (2000, 182)  0.423
+# expect: (5000, 182)  0.420
 ```
 
 ---

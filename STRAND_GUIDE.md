@@ -8,7 +8,7 @@
 
 It is 3 a.m. on an intensive care unit. A nurse is managing eight patients simultaneously. A patient in bed 6 has been stable for hours — but in the next six hours, they will deteriorate sharply. Their heart rate is slightly elevated. Their lactate is creeping up. A brief note from the evening team mentioned "looks a bit off." None of these signals, alone, would trigger an alarm.
 
-An AI system reviews all 2,000 patients and flags the ones it predicts will deteriorate in the next 24 hours. The nurse sees the alert and acts. Or the AI misses the patient entirely, and the nurse doesn't know to look twice.
+An AI system reviews all 5,000 patients and flags the ones it predicts will deteriorate in the next 24 hours. The nurse sees the alert and acts. Or the AI misses the patient entirely, and the nurse doesn't know to look twice.
 
 **This is not hypothetical.** Early warning AI systems are being deployed in ICUs across the UK, US, and Europe right now. The question is not whether they will be used — it is whether the teams deploying them have genuinely evaluated whether they are safe.
 
@@ -53,7 +53,7 @@ Before writing any code, understand the dataset and decide what AI models your t
 
 ### (a) What the dataset contains
 
-`icu_patients.csv` contains **2,000 synthetic post-surgical ICU patients, one row per patient, 182 columns**. The primary outcome label is `deteriorated_24h` (1 = patient deteriorated within 24 hours of ICU admission). Approximately **42% of patients deteriorated**. A secondary outcome `major_complication_30d` (~28%) is also present.
+`icu_patients.csv` contains **5,000 synthetic post-surgical ICU patients, one row per patient, 182 columns**. The primary outcome label is `deteriorated_24h` (1 = patient deteriorated within 24 hours of ICU admission). Approximately **42% of patients deteriorated**. A secondary outcome `major_complication_30d` (~30%) is also present.
 
 | Modality | Key features | Notes |
 |---|---|---|
@@ -260,7 +260,7 @@ All findings — subgroup gaps, failure mode narratives, deployment conditions, 
 ### All roles — first 10 minutes (everyone, together)
 
 - Read this guide in full and agree on which challenge idea to pursue.
-- Open `icu_patients.csv` — confirm 2,000 rows and 182 columns, check the deterioration rate (`deteriorated_24h`, ~42%), count NaN values in `note_risk_score` (~32% of patients) and `blood_loss_ml` (~36%).
+- Open `icu_patients.csv` — confirm 5,000 rows and 182 columns, check the deterioration rate (`deteriorated_24h`, ~42%), count NaN values in `note_risk_score` (~32% of patients) and `blood_loss_ml` (~35%).
 - Decide what models your team will build — agree on at least two. Sketch which features each model will use and how missing `note_risk_score` and `blood_loss_ml` values will be handled in each.
 - Explore the `surgery_type` and `admission_urgency` distributions — note which surgical types and urgency categories have the highest missingness in notes and blood loss.
 - Decide your decision threshold — or agree to compare several. This choice drives the clinical deployment assessment in item D.
@@ -406,7 +406,7 @@ Provided ready-to-use. Do not modify the file. The full column reference with mi
 # Verify dataset on load
 import pandas as pd
 df = pd.read_csv('data/raw/icu_patients.csv')
-print(df.shape)                                    # expect (2000, 182)
+print(df.shape)                                    # expect (5000, 182)
 print(df['deteriorated_24h'].mean())               # expect ~0.42
 print(df['note_risk_score'].isna().mean())         # expect ~0.32 (MNAR)
 print(df['blood_loss_missing'].mean())             # expect ~0.36 (MNAR)
