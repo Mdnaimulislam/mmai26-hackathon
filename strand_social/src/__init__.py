@@ -1,1 +1,0 @@
-"""Strand package marker (Housing)."""

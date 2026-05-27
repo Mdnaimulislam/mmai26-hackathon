@@ -1,0 +1,63 @@
+{
+  "schema_version": "omaib-housing",
+  "submission_type": "housing_benchmark_card",
+  "strand": "housing",
+  "hackathon": "MultimodalAI26",
+  "submitted": "",
+  "team": {
+    "name": "",
+    "members": ""
+  },
+  "models": [
+    {
+      "name": "Your model name A",
+      "verdict": "e.g. READY, CONDITIONAL, or NOT READY",
+      "conditions": "",
+      "narrative": "",
+      "metrics": {
+        "auroc": 0.0,
+        "auprc": 0.0,
+        "brier_score": 0.0,
+        "sensitivity": 0.0,
+        "specificity": 0.0,
+        "ppv": 0.0,
+        "npv": 0.0,
+        "f1": 0.0,
+        "threshold": 0.5,
+        "n_properties": 0
+      },
+      "subgroup_gaps": {
+        "flat": 0.0,
+        "terraced": 0.0,
+        "semi_detached": 0.0,
+        "detached": 0.0
+      }
+    },
+    {
+      "name": "Your model name B",
+      "verdict": "e.g. READY, CONDITIONAL, or NOT READY",
+      "conditions": "",
+      "narrative": "",
+      "metrics": {
+        "auroc": 0.0,
+        "auprc": 0.0,
+        "brier_score": 0.0,
+        "sensitivity": 0.0,
+        "specificity": 0.0,
+        "ppv": 0.0,
+        "npv": 0.0,
+        "f1": 0.0,
+        "threshold": 0.5,
+        "n_properties": 0
+      },
+      "subgroup_gaps": {
+        "flat": 0.0,
+        "terraced": 0.0,
+        "semi_detached": 0.0,
+        "detached": 0.0
+      }
+    }
+  ],
+  "overall_verdict": "",
+  "overall_notes": ""
+}

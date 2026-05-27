@@ -1,0 +1,57 @@
+repos:
+  # --- Whitespace / file hygiene ---
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=5000]
+
+  # --- Python formatting (black) ---
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  # --- Linting (ruff -- covers flake8, isort, pyupgrade and more) ---
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.4
+    hooks:
+      - id: ruff
+        args: [--fix, --line-length=100]
+
+  # --- Type checking (mypy -- opt in by uncommenting) ---
+  # Teams using type annotations can enable this. Remove the comment block to activate.
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.13.0
+  #   hooks:
+  #     - id: mypy
+  #       additional_dependencies: [pandas-stubs, types-requests]
+
+  # --- Streamlit syntax check ---
+  # Uncomment and set 'files' to your app entry point if you build a Streamlit solution.
+  # - repo: local
+  #   hooks:
+  #     - id: streamlit-syntax
+  #       name: Streamlit app syntax check
+  #       entry: python -m py_compile
+  #       language: system
+  #       files: ^app\.py$
+  #       types: [python]
+
+  # --- Housing strand JSON submission validator ---
+  - repo: local
+    hooks:
+      - id: validate-housing-submission
+        name: Validate housing strand JSON submission files
+        entry: python validate_submission.py
+        language: system
+        files: reference/(omaib_pathway|housing_benchmark_card)\.json
+        pass_filenames: false
