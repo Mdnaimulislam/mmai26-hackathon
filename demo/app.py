@@ -129,7 +129,7 @@ with st.sidebar:
         st.success(f"test.csv loaded: {len(test_df):,} patients")
     else:
         st.error("test.csv not found.")
-        st.info("Run python setup.py first.")
+        st.info("Run 01_preprocess_and_split.ipynb to generate the processed data.")
 
     loaded  = [k for k in MODEL_LABELS if k in models]
     missing = [k for k in MODEL_LABELS if k not in models]
@@ -184,7 +184,7 @@ with tab_brief:
     )
 
     if test_df is None or not all_probs:
-        st.warning("Run `python setup.py` first to generate data and models.")
+        st.warning("Run all three notebooks in order first, then relaunch the app.")
         st.stop()
 
     col_sel, col_info = st.columns([1, 2])

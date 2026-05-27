@@ -7,4 +7,5 @@ matplotlib>=3.8
 plotly>=5.20
 joblib>=1.3
 scipy>=1.12
+torch>=2.0
 pykale>=0.2.0
