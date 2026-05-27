@@ -25,10 +25,23 @@ Choose one strand for your whole team. Each strand has a dataset, a set of chall
 ### Clinical Strand
 **Challenge:** Can you trust an AI in the ICU?
 
-Three pre-built AI models predict which ICU patients will deteriorate in the next 24 hours. Your team evaluates all three for clinical deployment readiness — building the structured evidence a hospital would need before trusting any of them with a real patient.
+It is 3 a.m. on an intensive care unit. A nurse is managing eight patients simultaneously. A patient in bed 6 has been stable for hours — but in the next six hours, they will deteriorate sharply. Their heart rate is slightly elevated. Their lactate is creeping up. A brief note from the evening team mentioned "looks a bit off." None of these signals, alone, would trigger an alarm.
+
+An AI system reviews all 2,000 patients and flags the ones it predicts will deteriorate in the next 24 hours. The nurse sees the alert and acts. Or the AI misses the patient entirely, and the nurse doesn't know to look twice.
+
+Each team builds a solution grounded in the clinical dataset and produces a structured set of evidence deliverables that a clinical governance board could act on. The problem is defined, the dataset is provided, and the output format is specified — but what you build on top, and how you communicate what you find, is entirely your team's.
+
+### What You Build
+- **A. The solution** — a runnable tool with a clear intended user and a working demonstration of its core function. Your team may choose one of the suggested challenge ideas or define your own compelling problem grounded in the dataset.
+- **B. OMAIB Pathway Manifest** — `omaib_pathway.json` — a structured JSON manifest containing per-model verdicts and metrics for all the models you used.
+- **C. Model Safety Report** — `model_safety_report.json` — a structured JSON report containing the full safety assessment: narrative, subgroup analysis, deployment questions, and option-specific evidence.
+- **D. Evidence Dashboard** — five analytical views populated through your chosen tools and workflows: model performance, subgroup equity, explainability, failure mode catalogue, and clinical deployment assessment.
+- **E. Option-specific deliverable** — a JSON section (`option_specific`) embedded within item C, with content specific to the challenge idea your team chose.
 
 *Modalities:* vital signs, laboratory results, clinical notes (NLP risk score)
+
 *Final deliverable:* Model Safety Report — APPROVE / CONDITIONAL / NOT APPROVED per model
+
 *Track roles:* The Explainer · The Failure Hunter · The Gatekeeper
 
 ---
@@ -36,10 +49,26 @@ Three pre-built AI models predict which ICU patients will deteriorate in the nex
 ### Housing Strand
 **Challenge:** Can you trust a dataset used for housing decisions?
 
-A smart sensor network deployed across 120 social housing properties has recorded months of readings. Teams build their own AI models to predict cold risk, then evaluate both the models and the underlying dataset to determine whether the data is safe to use for housing decisions.
+A council housing team is trying to decide which of its 250 social housing properties should receive a boiler upgrade this winter. They have two years of daily sensor readings — indoor temperature, humidity, and CO₂ concentration — from a smart sensor network installed across the estate.
+
+The data looks comprehensive. But a data manager notices something: for 40 of the properties, the CO₂ sensor stopped working for weeks at a time. These properties are not a random sample — they tend to be older, in higher-deprivation areas, and more likely to be in genuine need of an upgrade. The model trained on this dataset will be least reliable for the very households it is most important to get right.
+
+Before anyone uses this dataset to decide which households receive a boiler upgrade, someone must answer a hard question: is this data safe to use?
+
+Each team builds a solution grounded in the housing dataset and produces a structured set of evidence deliverables that a council, housing association, or social-impact organisation could act on. The problem is defined, the dataset is provided, and the output format is specified — but what you build on top, and how you communicate what you find, is entirely your team's.
+
+### What You Build
+
+- **A. The solution** — a runnable tool with a clear intended user and a working demonstration of its core function.
+- **B. OMAIB Pathway Manifest** — `omaib_pathway.json` — a structured JSON manifest containing per-model verdicts and metrics for all the models you built and evaluated.
+- **C. Housing Benchmark Card** — `housing_benchmark_card.json` — a structured JSON report containing the full dataset and model assessment: narrative, subgroup analysis, deployment questions, component verdicts, and option-specific evidence.
+- **D. Evidence Dashboard** — five analytical views populated through your chosen tools and workflows: sensor data quality, MNAR analysis, subgroup equity, leakage audit, and dataset audit.
+- **E. Option-specific deliverable** — a JSON section (`option_specific`) embedded within item C, with content specific to the challenge idea your team chose.
 
 *Modalities:* smart meter time-series, IoT sensors (temperature, CO₂, noise), resident survey data
+
 *Final deliverable:* Housing Benchmark Card — READY / CONDITIONAL / NOT READY
+
 *Track roles:* The Sensor Inspector · The Split Builder · The Equity Analyst
 
 ---
@@ -64,6 +93,7 @@ A robot lab's findings sit in a silo. They cannot be discovered, verified, or bu
 *Each option also carries its own specific output: a metric proposal page (option 1), an evidence card and governance policy (option 2), or a usability test report (option 3). All must be embedded in or linked from the live sub-portal before the demo session begins.*
 
 *Modalities:* lab capability metadata, robot dataset registries, federation manifests (JSON), institution profiles, web configuration
+
 *Track roles:* The Builder · The Connector · The Demonstrator
 
 ---
@@ -207,9 +237,10 @@ All strands are judged on the same three criteria:
 
 | Criterion | Weight | What it means |
 |---|---|---|
-| **Evidence quality** | 40% | Are your findings specific and backed by evidence drawn from the data? Did you surface concrete problems or trust gaps — not just describe their possibility? |
-| **Clarity** | 30% | Could a non-technical practitioner — a clinician, housing officer, or robotics researcher — understand and act on your output? |
-| **Deployability** | 30% | How close is your deliverable to something the domain team could actually publish, adopt, or act on? |
+| **Creativity** | 15% | Original approach with a clear point of view; the solution and evidence framing say something distinctive about the team's perspective and the clinical problem |
+| **Evidence quality** | 35% | Are your findings specific and backed by evidence drawn from the data? Did you surface concrete problems or trust gaps — not just describe their possibility? |
+| **Clarity** | 25% | Could a non-technical practitioner — a clinician, housing officer, or robotics researcher — understand and act on your output? |
+| **Deployability** | 25% | How close is your deliverable to something the domain team could actually publish, adopt, or act on? |
 
 Judges will ask questions during the demo session. Your team needs to understand what you built and why you made the decisions you made — not just show a working notebook.
 
