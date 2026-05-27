@@ -1,3 +1,0 @@
-model,threshold,auroc,auprc,brier_score,sensitivity,specificity,ppv,npv,f1,tp,fp,tn,fn,n_positive,n_total
-Model A,0.5,0.8449,0.7101,0.1295,0.5263,0.9286,0.7143,0.8525,0.6061,10,4,52,9,19,75
-Model C,0.5,0.7773,0.5812,0.1572,0.5789,0.8571,0.5789,0.8571,0.5789,11,8,48,8,19,75
