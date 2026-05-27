@@ -55,24 +55,27 @@ Before writing any code, understand the data and begin planning the models your 
 
 `housing_properties_daily.csv` contains **250 properties × 730 days ≈ 182,750 rows of daily averages, covering 1 January 2023 to 31 December 2024**. The outcome label is `cold_risk` (1 = mean indoor temperature fell below 19.0°C that day — the WHO minimum indoor temperature for social housing). Approximately **30–34% of property-days are cold-risk positive**.
 
-| Modality | Features | Notes |
+| Modality | Column(s) | Notes |
 |---|---|---|
-| Property metadata | Property reference, flat label, address, postcode, property type (flat / terraced / semi-detached / detached — 70 / 100 / 55 / 25 properties) | Flats are 2–3°C warmer in winter due to shared walls (thermal mass) |
-| Indoor temperature | Daily mean temperature (°C) | ~3% missing |
-| Indoor humidity | Daily mean humidity (%) | ~5% missing |
-| CO₂ concentration | Daily mean CO₂ (ppm) | ~38% missing overall — MNAR: 40 properties have 70–95% dropout due to sensor hardware failure, concentrated in worse-condition properties; some gaps exceed 30 consecutive days |
-| Engineered temporal features | Previous-day temperature lag, month, day of week | Lag feature creates property-level data-leakage risk if the dataset is split naively by row rather than by property |
+| Property metadata | `reference`, `Sub-building`, `address`, `postcode`, `property_type` (flat / terraced / semi-detached / detached — 70 / 100 / 55 / 25 properties), `is_flat` | Flats are 2–3°C warmer in winter due to shared walls (thermal mass) |
+| Indoor temperature | `avgTemperature` — daily mean indoor temperature (°C) | ~3% missing |
+| Indoor humidity | `avgHumidity` — daily mean indoor humidity (%) | ~5% missing |
+| CO₂ concentration | `avgCo2` — daily mean CO₂ (ppm) | ~38% missing overall — MNAR: 40 properties have 70–95% dropout due to sensor hardware failure, concentrated in worse-condition properties; some gaps exceed 30 consecutive days |
+| Smart meter | `smart_meter_kwh` — daily energy consumption (kWh) | ~2.6% missing (meter communication dropout); increases sharply in winter; correlates inversely with temperature |
+| Ambient noise | `noise_db` — daily mean ambient sound level (dB) | ~8% missing; flats typically 5–10 dB louder than detached properties due to shared walls |
+| Resident survey | `survey_score` — resident thermal comfort score (1.0–5.0) | ~96–98% missing (sparse: ~1 response per property per month on average); MNAR — cold and higher-deprivation properties respond less often and report lower scores |
+| Temporal | `year`, `month`, `day` | Calendar date split across three columns; teams should engineer `lag_temp` and `day_of_week` as needed — `lag_temp` creates property-level data-leakage risk if the dataset is split naively by row |
 
 The full column reference is in Section 12C.
 
 ### (b) What your team must build
 
-Each team must design and build at least two AI models to enable a meaningful comparison and evaluation. There is no prescribed architecture — the design choices are yours.
+Each team must design and build at least three AI models to enable a meaningful comparison and evaluation. There is no prescribed architecture — the design choices are yours.
 
 | Design question | Guidance |
 |---|---|
-| How many models? | At least two — enough to compare modality combinations and find genuine failure modes. Three is a natural number for a structured evaluation. |
-| What modalities? | The dataset has five feature groups: property metadata, indoor temperature, humidity, CO₂ concentration, and temporal features. |
+| How many models? | At least three — enough to compare modality combinations and find genuine failure modes. Three is a natural number for a structured evaluation. |
+| What modalities? | The dataset has eight feature groups: property metadata, indoor temperature, humidity, CO₂ concentration, smart meter energy, ambient noise, resident survey, and temporal features. |
 | What architectures? | Choose architectures appropriate to the feature count and the interpretability requirement for housing decisions. |
 | How to create useful failure modes? | Think about how different model designs — in terms of feature choice and missing-data handling — will produce different failure profiles worth evaluating and comparing. |
 | What to do with missing data? | `co2_ppm` is absent for approximately 38% of property-days (MNAR) — concentrated in properties with sensor hardware failures. How your models handle this pattern is one of the most important design decisions and a key target for evaluation. |
@@ -375,39 +378,57 @@ Provided ready-to-use. Do not modify the file.
 
 | Column | Type | Description |
 |---|---|---|
-| `property_id` | str | Unique property identifier (U-prefix or free-text shorthand) |
-| `date` | date | Calendar date (2023-01-01 to 2024-12-31) |
-| `property_type` | str | `flat`, `terraced`, `semi_detached`, or `detached` |
-| `is_flat` | int | 1 if `property_type` is flat, else 0 |
-| `postcode` | str | Postcode sector |
-| `temp_mean` | float | Daily mean indoor temperature (°C) — ~3% missing |
-| `humidity_mean` | float | Daily mean indoor humidity (%) — ~5% missing |
-| `co2_ppm` | float | Daily mean CO₂ concentration (ppm) — ~38% missing (MNAR) |
-| `co2_imputed` | float | CO₂ with mean imputation applied where missing |
-| `co2_missing` | int | 1 if `co2_ppm` was missing for this row, else 0 |
-| `lag_temp` | float | Previous-day mean temperature — NaN on day 1 of each property |
+| `reference` | str | Property identifier — structured (`U` + 6–9 digits) or free-text address shorthand |
+| `Sub-building` | str | Flat label (e.g. `Flat 1A`) — blank string for non-flat properties |
+| `address` | str | Street address in varied formats |
+| `postcode` | str | `ZZ`-prefix fictional postcode sector |
+| `property_type` | str | `flat`, `terraced`, `semi-detached`, or `detached` |
+| `is_flat` | int | 1 if `property_type` is `flat`, else 0 |
+| `year` | int | Year (2023 or 2024) |
 | `month` | int | Calendar month (1–12) |
-| `day_of_week` | int | Day of week (0 = Monday, 6 = Sunday) |
-| `cold_risk` | int | Prediction target: 1 = `temp_mean` < 19.0°C that day |
+| `day` | int | Day of month |
+| `avgTemperature` | float | Daily mean indoor temperature (°C) — ~3% missing |
+| `avgHumidity` | float | Daily mean indoor humidity (%) — ~5% missing |
+| `avgCo2` | float | Daily mean CO₂ concentration (ppm) — ~38% missing (MNAR) |
+| `smart_meter_kwh` | float | Daily energy consumption (kWh) — ~2.6% missing |
+| `noise_db` | float | Daily mean ambient sound level (dB) — ~8% missing |
+| `survey_score` | float | Resident thermal comfort score (1.0–5.0 in 0.5 steps) — ~96–98% missing (MNAR) |
+
+**Features your team must engineer before modelling** — these are not in the raw file:
+
+| Feature to create | How |
+|---|---|
+| `cold_risk` | `(df['avgTemperature'] < 19.0).astype(int)` — the prediction target |
+| `lag_temp` | Previous-day `avgTemperature` per property — NaN on day 1; creates leakage risk if split by row |
+| `co2_missing` | `df['avgCo2'].isna().astype(int)` — MNAR indicator |
+| `co2_imputed` | `df['avgCo2'].fillna(df['avgCo2'].mean())` — mean imputation baseline |
+| `day_of_week` | `pd.to_datetime(df[['year','month','day']]).dt.dayofweek` |
 
 ```python
 # Verify dataset on load
 import pandas as pd
 df = pd.read_csv('data/raw/housing_properties_daily.csv')
-print(df.shape)                           # expect (~182750, 14+)
-print(df['cold_risk'].mean())             # expect ~0.30–0.34
-print(df['co2_ppm'].isna().mean())        # expect ~0.38  (MNAR)
-print(df['property_type'].value_counts()) # flat 70, terraced 100, semi_detached 55, detached 25
+print(df.shape)                               # expect (182750, 15)
+print(df['property_type'].value_counts())     # flat 70, terraced 100, semi-detached 55, detached 25
 
-# After splitting by property_id, confirm no property appears in both folds
-train = df[df['property_id'].isin(train_ids)]
-test  = df[df['property_id'].isin(test_ids)]
-overlap = set(train['property_id']) & set(test['property_id'])
+# Create cold_risk label (not pre-computed in raw file)
+df['cold_risk'] = (df['avgTemperature'] < 19.0).astype(int)
+print(df['cold_risk'].mean())                 # expect ~0.30–0.34
+
+print(df['avgCo2'].isna().mean())             # expect ~0.38  (MNAR)
+print(df['smart_meter_kwh'].isna().mean())    # expect ~0.026
+print(df['survey_score'].notna().mean())      # expect ~0.02–0.04 (sparse MNAR)
+print(df['noise_db'].isna().mean())           # expect ~0.08
+
+# After splitting by reference, confirm no property appears in both folds
+train = df[df['reference'].isin(train_ids)]
+test  = df[df['reference'].isin(test_ids)]
+overlap = set(train['reference']) & set(test['reference'])
 print('Leakage check:', len(overlap), 'overlapping properties')  # expect 0
 
 # Check CO₂ dropout per property
-dropout = df.groupby('property_id')['co2_ppm'].apply(lambda x: x.isna().mean())
-print('High-dropout properties (>50%):', dropout.gt(0.5).sum())
+dropout = df.groupby('reference')['avgCo2'].apply(lambda x: x.isna().mean())
+print('High-dropout properties (>50%):', dropout.gt(0.5).sum())  # expect ~40
 ```
 
 ---

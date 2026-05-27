@@ -14,7 +14,7 @@ Read **[STRAND_GUIDE.md](STRAND_GUIDE.md)** for the full challenge brief, track 
 
 | Path | Contents |
 |---|---|
-| `data/raw/housing_properties_daily.csv` | Sensor readings and property metadata for 120 properties over 730 days |
+| `data/raw/housing_properties_daily.csv` | Sensor readings and property metadata for 250 properties × 731 days ≈ 182,750 rows |
 | `reference/omaib_pathway.json` | Housing manifest template — fill in your team's models and verdicts |
 | `reference/housing_benchmark_card.json` | Full Housing Benchmark Card template |
 | `validate_submission.py` | Pre-submission validator — run before committing your JSON files |
