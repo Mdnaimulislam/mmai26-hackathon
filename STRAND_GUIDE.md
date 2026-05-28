@@ -30,9 +30,9 @@ Each team builds a solution grounded in the housing dataset and produces a struc
 
 **A. The solution** — a runnable tool with a clear intended user and a working demonstration of its core function.
 
-**B. OMAIB Pathway Manifest** — `omaib_pathway.json` — a structured JSON manifest containing per-model verdicts and metrics for all the models you built and evaluated.
+**B. OMAIB Pathway Manifest** — `reference/omaib_pathway.json` — a structured JSON manifest containing per-model verdicts and metrics for all the models you built and evaluated.
 
-**C. Housing Benchmark Card** — `housing_benchmark_card.json` — a structured JSON report containing the full dataset and model assessment: narrative, subgroup analysis, deployment questions, component verdicts, and option-specific evidence.
+**C. Housing Benchmark Card** — `reference/housing_benchmark_card.json` — a structured JSON report containing the full dataset and model assessment: narrative, subgroup analysis, deployment questions, component verdicts, and option-specific evidence.
 
 **D. Evidence Dashboard** — five analytical views populated through your chosen tools and workflows: sensor data quality, MNAR analysis, subgroup equity, leakage audit, and dataset audit.
 
@@ -53,7 +53,7 @@ Before writing any code, understand the data and begin planning the models your 
 
 ### (a) What the dataset contains
 
-`housing_properties_daily.csv` contains **250 properties × 730 days ≈ 182,750 rows of daily averages, covering 1 January 2023 to 31 December 2024**. The outcome label is `cold_risk` (1 = mean indoor temperature fell below 19.0°C that day — the WHO minimum indoor temperature for social housing). Approximately **30–34% of property-days are cold-risk positive**.
+`housing_properties_daily.csv` contains **250 properties × 731 days = 182,750 rows of daily averages, covering 1 January 2023 to 31 December 2024 (2024 is a leap year: 365 + 366 = 731 days)**. The outcome label is `cold_risk` (1 = mean indoor temperature fell below 19.0°C that day — the WHO minimum indoor temperature for social housing). Approximately **30–34% of property-days are cold-risk positive**.
 
 | Modality | Column(s) | Notes |
 |---|---|---|
@@ -177,7 +177,7 @@ Roles run in parallel from the start. The critical convergence point is the Evid
 | **NPV** | Of all properties cleared by the model, what fraction truly were not cold? | Tells you how safe it is to skip a property based on a negative prediction. |
 | **Subgroup equity** | Does the model perform equally across property types (flat, terraced, detached)? | A model accurate on average but over-predicting for flats wastes budget on properties that do not need upgrades, while missing detached houses that do. |
 | **MNAR** | Missing Not At Random — data is absent for reasons correlated with the outcome. | CO₂ dropout is concentrated in older, higher-deprivation properties — the very households most likely to need intervention. A model that depends on CO₂ readings will be least reliable for these properties. |
-| **Property-level split** | The train/test split is made at the property level, not the row level. | Each property contributes 730 daily rows. A row-level split leaks yesterday's temperature into the test set via the `lag_temp` feature. Always split by property. |
+| **Property-level split** | The train/test split is made at the property level, not the row level. | Each property contributes 731 daily rows. A row-level split leaks yesterday's temperature into the test set via the `lag_temp` feature. Always split by property. |
 | **Leakage** | The model sees information during training that it would not have at prediction time. | Row-level splitting causes `lag_temp` leakage. A property reference appearing in both train and test folds also constitutes leakage. |
 | **Component verdict** | A READY / CONDITIONAL / NOT READY decision for one aspect of the dataset audit. | Three components: data quality, split integrity, and equity. All three feed into `overall_verdict` in `housing_benchmark_card.json`. |
 
@@ -267,7 +267,7 @@ All findings — subgroup gaps, failure mode narratives, deployment conditions, 
 - Open `housing_properties_daily.csv` — confirm approximately 182,750 rows, check the cold-risk rate (~30–34%), count NaN values in `co2_ppm` (~38%).
 - Compute per-property CO₂ dropout rates — identify which properties have the highest missingness and note whether they cluster by property type or postcode.
 - Look at the property type distribution and consider how this affects subgroup sample sizes and what a meaningful train/test split looks like.
-- Decide what models your team will build — agree on at least two. Sketch which features each model will use and how missing `co2_ppm` values will be handled in each.
+- Decide what models your team will build — agree on at least three. Sketch which features each model will use and how missing `co2_ppm` values will be handled in each.
 - Assign roles: Builder, Evidence Analyst, Governance Lead (and fourth member if present).
 
 ### Minutes 10–25 — parallel work
@@ -347,7 +347,7 @@ All fields are required. A single missing or empty field causes the manifest to 
 
 ### 12B. `housing_benchmark_card.json` — Field Reference
 
-All fields required. The `models` array must contain entries for all models your team built and evaluated — at minimum two.
+All fields required. The `models` array must contain entries for all models your team built and evaluated — at minimum three.
 
 | Field | Type | Description |
 |---|---|---|

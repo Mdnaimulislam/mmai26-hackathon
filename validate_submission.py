@@ -10,6 +10,7 @@ Exit 0 on success, exit 1 on any error (triggers pre-commit failure).
 """
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -24,6 +25,26 @@ VALID_OPTION_TYPES = {
     "fairness_disparity_summary",
 }
 PLACEHOLDER_VALUES = {"", "0", "0.0", "not provided", "tbd", "todo", "placeholder"}
+OPTION_REQUIRED_KEYS = {
+    "coverage_report": {
+        "property_type_distribution",
+        "top_ranked_count",
+        "over_represented_types",
+        "under_represented_types",
+        "reranking_under_fair_weighting",
+    },
+    "threshold_sensitivity_report": {
+        "thresholds_tested",
+        "flagged_count_at_each_threshold",
+        "recommended_threshold",
+        "sensitivity_fatigue_tradeoff",
+    },
+    "fairness_disparity_summary": {
+        "disparity_findings",
+        "most_affected_group",
+        "recommended_mitigation",
+    },
+}
 
 
 def err(msg):
@@ -47,6 +68,27 @@ def check_string(obj, key, label, required=True):
             warn(f"{label}.{key} is empty (recommended to fill)")
 
 
+def get_current_branch():
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        branch = result.stdout.strip()
+        return branch if branch else None
+    except Exception:
+        return None
+
+
+def check_exact_string(obj, key, expected, label):
+    val = obj.get(key, "")
+    if val != expected:
+        err(f"{label}.{key} must be '{expected}', got '{val}'")
+
+
 def validate_pathway(path):
     print(f"  Checking {path.name} ...")
     try:
@@ -55,25 +97,26 @@ def validate_pathway(path):
         err(f"{path.name} -- invalid JSON: {e}")
         return
 
-    if data.get("schema_version") != "omaib-housing":
-        err(f"schema_version must be 'omaib-housing', got '{data.get('schema_version')}'")
-    if data.get("submission_type") != "housing_benchmark_card":
-        err(
-            f"submission_type must be 'housing_benchmark_card', "
-            f"got '{data.get('submission_type')}'"
-        )
+    check_exact_string(data, "schema_version", "omaib-housing", "top-level")
+    check_exact_string(data, "submission_type", "housing_benchmark_card", "top-level")
+    check_exact_string(data, "strand", "housing", "top-level")
+    check_exact_string(data, "hackathon", "MultimodalAI26", "top-level")
+    check_string(data, "submitted", "top-level")
 
     team = data.get("team", {})
     if is_placeholder(team.get("name", "")):
         err("team.name is empty -- fill in your team name before committing")
     if is_placeholder(team.get("members", "")):
         err("team.members is empty -- list all team member names")
+    branch = get_current_branch()
+    if branch and team.get("name", "") != branch:
+        err(f"team.name '{team.get('name', '')}' must match current git branch '{branch}'")
 
     models = data.get("models", [])
-    if len(models) < 2:
+    if len(models) < 3:
         err(
             f"models array has {len(models)} entr{'y' if len(models) == 1 else 'ies'}; "
-            f"at least 2 required"
+            f"at least 3 required"
         )
 
     for i, m in enumerate(models):
@@ -110,18 +153,26 @@ def validate_benchmark_card(path):
         err(f"{path.name} -- invalid JSON: {e}")
         return
 
-    if data.get("schema_version") != "omaib-housing-v0.1":
-        err(f"schema_version must be 'omaib-housing-v0.1'")
+    check_exact_string(data, "schema_version", "omaib-housing-v0.1", "top-level")
+    check_exact_string(data, "report_type", "housing_benchmark_card", "top-level")
+    check_exact_string(data, "strand", "housing", "top-level")
+    check_exact_string(data, "hackathon", "MultimodalAI26", "top-level")
+    check_string(data, "evaluation_date", "top-level")
 
     team = data.get("team", {})
     if is_placeholder(team.get("name", "")):
         err("team.name is empty")
+    if is_placeholder(team.get("members", "")):
+        err("team.members is empty")
+    branch = get_current_branch()
+    if branch and team.get("name", "") != branch:
+        err(f"team.name '{team.get('name', '')}' must match current git branch '{branch}'")
 
     models = data.get("models", [])
-    if len(models) < 2:
+    if len(models) < 3:
         err(
             f"models array has {len(models)} entr{'y' if len(models) == 1 else 'ies'}; "
-            f"at least 2 required"
+            f"at least 3 required"
         )
 
     for i, m in enumerate(models):
@@ -164,15 +215,22 @@ def validate_benchmark_card(path):
     # Option-specific
     opt = data.get("option_specific", {})
     opt_type = opt.get("type", "")
-    if opt_type and opt_type not in VALID_OPTION_TYPES:
-        warn(
+    if opt_type not in VALID_OPTION_TYPES:
+        err(
             f"option_specific.type '{opt_type}' is not a recognised type "
             f"({', '.join(sorted(VALID_OPTION_TYPES))})"
         )
     if is_placeholder(opt.get("title", "")):
-        warn("option_specific.title is empty")
-    if not opt.get("content"):
-        warn("option_specific.content is empty")
+        err("option_specific.title is empty")
+    content = opt.get("content")
+    if not isinstance(content, dict) or not content:
+        err("option_specific.content is empty")
+        return
+
+    required_keys = OPTION_REQUIRED_KEYS.get(opt_type, set())
+    missing_keys = sorted([k for k in required_keys if k not in content])
+    for key in missing_keys:
+        err(f"option_specific.content.{key} is required for type '{opt_type}'")
 
 
 def main():

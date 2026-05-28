@@ -1,0 +1,51 @@
+reference,Sub-building,address,postcode,property_type,is_flat
+flat 1a 33 draywick,Flat 1A,33 Draywick Place,ZZ1 4KP,flat,1
+U404211655,Flat 1A,"Wulfden Row, 26",ZZ8 9FT,flat,1
+flat 2b 54,Flat 2B,54 Ravenspur Gardens,ZZ7 7NK,flat,1
+U295345,Unit 3,"Ravenspur Gardens, 166",ZZ7 7NK,flat,1
+apt 4b quinley,Apt 4B,"Quinley Grove, 15",ZZ4 8YM,flat,1
+U528896154,Apt 4B,29 Wulfden Row,ZZ8 9FT,flat,1
+U330870444,Flat 2B,98 Fenstow Ln,ZZ3 1NW,flat,1
+unit 3 85 belcroft,Unit 3,85 belcroft rise,ZZ6 4SX,flat,1
+U56467760,6,98 Draywick Place,ZZ1 4KP,flat,1
+U5768354,Flat 2B,79 pendwick close,ZZ9 1BH,flat,1
+apt 4b aldwick way,Apt 4B,"Aldwick Way, 161",ZZ5 3CR,flat,1
+unit 3 thornhaven,Unit 3,"Thornhaven Avenue, 100",ZZ2 7RQ,flat,1
+U763012057,Unit 3,51 salthorpe row,ZZ9 6MU,flat,1
+58 greyloch terr,,58 Greyloch Terr,ZZ8 3PL,terraced,0
+U0952650,,175 Mossden Hill,ZZ7 2WE,terraced,0
+U1258816,,98 Pendwick Close,ZZ9 1BH,terraced,0
+U96274511,,56 Thornhaven Ave,ZZ2 7RQ,terraced,0
+U032503,,173 Draywick Place,ZZ1 4KP,terraced,0
+greyloch terrace 171,,"Greyloch Terrace, 171",ZZ8 3PL,terraced,0
+U538935,,163 Pendwick Cl,ZZ9 1BH,terraced,0
+U73008163,,78 velmoor street,ZZ1 2HF,terraced,0
+U732940,,160 greyloch terrace,ZZ8 3PL,terraced,0
+93 sowgate walk,,93 sowgate walk,ZZ6 1QA,terraced,0
+U011764205,,85 Velmoor Street,ZZ1 2HF,terraced,0
+U564187982,,4 Fenstow Ln,ZZ3 1NW,terraced,0
+sowgate walk 17,,"Sowgate Walk, 17",ZZ6 1QA,terraced,0
+U882661553,,6 Greyloch Terr,ZZ8 3PL,terraced,0
+U354490786,,160 Harspell Dr,ZZ4 2LG,terraced,0
+U1641392,,28 quinley grove,ZZ4 8YM,terraced,0
+U954179688,,9 Velmoor St,ZZ1 2HF,terraced,0
+U3713136,,"Brackway Close, 174",ZZ3 5TJ,terraced,0
+78 thornhaven avenue,,78 Thornhaven Avenue,ZZ2 7RQ,terraced,0
+U1183557,,22 colwick road,ZZ2 9XB,terraced,0
+U321861,,167 Draywick Place,ZZ1 4KP,semi-detached,0
+U735244,,36 aldwick way,ZZ5 3CR,semi-detached,0
+U904891,,"Thornhaven Avenue, 144",ZZ2 7RQ,semi-detached,0
+U031190396,,16 Pendwick Close,ZZ9 1BH,semi-detached,0
+24 mossden hill,,24 mossden hill,ZZ7 2WE,semi-detached,0
+U678229542,,167 harspell drive,ZZ4 2LG,semi-detached,0
+91 salthorpe row,,91 Salthorpe Row,ZZ9 6MU,semi-detached,0
+U643644,,"Pendwick Close, 166",ZZ9 1BH,semi-detached,0
+90 aldwick way,,90 Aldwick Way,ZZ5 3CR,semi-detached,0
+27 ravenspur gdns,,27 Ravenspur Gdns,ZZ7 7NK,semi-detached,0
+U9993899,,133 Thornhaven Avenue,ZZ2 7RQ,semi-detached,0
+78 mossden hill,,78 Mossden Hill,ZZ7 2WE,semi-detached,0
+U682851,,"Brackway Close, 141",ZZ3 5TJ,detached,0
+U76090905,,"Ravenspur Gardens, 143",ZZ7 7NK,detached,0
+U2414203,,42 mossden hill,ZZ7 2WE,detached,0
+60 belcroft rise,,60 Belcroft Rise,ZZ6 4SX,detached,0
+135 draywick place,,135 Draywick Place,ZZ1 4KP,detached,0
