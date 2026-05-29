@@ -18,8 +18,6 @@ from src.evidence import (
     compute_sensor_quality_view,
 )
 from src.models.model_a import build_model_a
-from src.models.model_b import build_model_b
-from src.models.model_c import build_model_c
 
 
 FEATURES = [
@@ -63,8 +61,6 @@ def generate_demo_outputs():
 
     models = {
         "Model A Logistic Baseline": build_model_a(),
-        "Model B RandomForest Baseline": build_model_b(),
-        "Model C GradientBoosting Baseline": build_model_c(),
     }
 
     metric_rows_train = []
