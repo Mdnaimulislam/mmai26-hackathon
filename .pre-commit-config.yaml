@@ -36,13 +36,15 @@ repos:
   #       additional_dependencies: [pandas-stubs, types-requests]
 
   # --- Streamlit syntax check ---
-  - repo: local
-    hooks:
-      - id: streamlit-syntax
-        name: Streamlit app syntax check
-        entry: python -m py_compile demo/streamlit_app.py
-        language: system
-        pass_filenames: false
+  # Uncomment and set 'files' to your app entry point if you build a Streamlit solution.
+  # - repo: local
+  #   hooks:
+  #     - id: streamlit-syntax
+  #       name: Streamlit app syntax check
+  #       entry: python -m py_compile
+  #       language: system
+  #       files: ^app\.py$
+  #       types: [python]
 
   # --- Housing strand JSON submission validator ---
   - repo: local
