@@ -39,6 +39,7 @@ Each team builds a solution grounded in the clinical dataset and produces a stru
 
 
 ### What You Build
+**Core mandatory deliverables (all options):**
 - **A. The solution** — a runnable tool with a clear intended user and a working demonstration of its core function. Your team may choose one of the suggested challenge ideas or define your own compelling problem grounded in the dataset.
 - **B. OMAIB Pathway Manifest** — `omaib_pathway.json` — a structured JSON manifest containing per-model verdicts and metrics for all the models you used.
 - **C. Model Safety Report** — `model_safety_report.json` — a structured JSON report containing the full safety assessment: narrative, subgroup analysis, deployment questions, and option-specific evidence.
@@ -69,7 +70,7 @@ Each team builds a solution grounded in the housing dataset and produces a struc
 - **Heating failure prediction and fairness audit** — an AI-powered predictive tool that combines sensor time-series data with property metadata to identify households at imminent risk of heating system failure, with an explainability layer and a fairness check that flags whether high-risk scores are disproportionately concentrated among particular property types.
 
 ### What You Build
-
+**Core mandatory deliverables (all options):**
 - **A. The solution** — a runnable tool with a clear intended user and a working demonstration of its core function.
 - **B. OMAIB Pathway Manifest** — `omaib_pathway.json` — a structured JSON manifest containing per-model verdicts and metrics for all the models you built and evaluated.
 - **C. Housing Benchmark Card** — `housing_benchmark_card.json` — a structured JSON report containing the full dataset and model assessment: narrative, subgroup analysis, deployment questions, component verdicts, and option-specific evidence.
@@ -94,6 +95,7 @@ A robot lab's findings sit in a silo. They cannot be discovered, verified, or bu
 2. **Federated evidence governance** — Treat the federation manifest as a governance document. Design a structured evidence card format for the SONAIR ecosystem, implement at least one evidence card for the UR5e dataset, and include a written governance policy explaining what your team chose to publish, what to withhold, and why.
 3. **Accessible co-creation portal** — Build the most usable, practitioner-ready campus sub-portal on the strand. Prioritise accessibility, conduct a brief usability test with at least two people outside your team, and propose one concrete, implementable improvement on the page.
 
+### What You Build
 **Core mandatory deliverables (all options):**
 - **Campus Sub-Portal** — publicly accessible at a stable HTTPS URL; institution name and city, lab identity, at least one equipment item or dataset with specific details, and a collaboration contact. Must load without login and must not set X-Frame-Options headers.
 - **Federation Manifest** — a valid `federation.json` at the repository root with all 10 required fields, including real institution coordinates (`node.lat`, `node.lon`)
@@ -144,7 +146,7 @@ pip install -r requirements.txt
 jupyter notebook notebooks/
 ```
 
-> **Robotics strand only:** the deliverable is a web portal, not a Jupyter notebook. After cloning, open `index.html` and the accompanying JSON config files. No `pip install` is required unless you are building a Python-backed dashboard component.
+> **Robotics strand only:** the deliverable is a web portal. After cloning, open `index.html` and the accompanying JSON config files. No `pip install` is required unless you are building a Python-backed dashboard component.
 
 **Immediately after cloning, create your team branch:**
 
@@ -179,7 +181,7 @@ git push origin your-team-name
 
 **Your PR must include all mandatory core deliverables for your strand, plus your option-specific output.**
 
-For the clinical and housing strands this includes the completed JSON output file, all completed notebooks (run top to bottom, outputs saved), and the exported report. For the robotics strand this includes the live portal URL, `federation.json`, `theme.config.json`, and any option-specific page or document embedded in or linked from the portal.
+Refer to 'what must be built' section above to understand what must be included in your submission.
 
 **Submission window: 18:00–23:59 on 10 June.** Push your code to your GitHub team branch and open the PR during this window.
 
@@ -211,23 +213,6 @@ Each strand is designed for a team of 2–4, with parallel track roles during th
 - Someone who can write a clear, plain-English paragraph
 
 **AI coding assistants** (GitHub Copilot, Claude, ChatGPT) are allowed and encouraged. You must disclose what you used in your submission PR description — judges ask questions during the demo to verify understanding.
-
----
-
-## Who Can Join
-
-The hackathon is open to **registered MultimodalAI'26 workshop attendees**. Please complete the hackathon registration form to secure your place. Registration closes **4 June 2026**.
-
-**Eligible participants include:**
-- Graduate students (MSc, MEng, PhD) attending the workshop
-- Postdoctoral researchers and research fellows
-- University academic and research staff
-- Industry researchers, engineers, and practitioners
-- Clinicians, housing officers, safety inspectors, and domain experts — no prior machine learning experience required if teaming with technical members
-
-**Cross-disciplinary and cross-institution teams are strongly encouraged.** The judging explicitly rewards teams that combine domain expertise with technical skill.
-
-Solo participants are welcome — team formation at 10:20 is for exactly this.
 
 ---
 
@@ -278,37 +263,12 @@ Three teams will be recognised:
 
 ## Frequently Asked Questions
 
-**Do I need to be an AI expert to participate?**
-No. Every strand is designed for cross-disciplinary teams. If you understand the domain — clinical, housing, or robotics — your contribution is as valuable as the person writing Python.
-
-**Do I need to come with a team?**
-No. Solo participants are welcome. Team formation runs from 10:20 to 10:30 on the day.
-
-**What if I have never used Jupyter notebooks before?**
-Install VS Code with the Jupyter extension, or use JupyterLab — both are free and work in a few minutes. The notebooks guide you step by step. If you can read Python and run cells, you have enough.
-
-**Can I use AI coding assistants?**
-Yes, and we encourage it. You must disclose what you used in your PR description — judges ask questions during the demo to verify understanding.
-
-**What is the team branch name convention?**
-Use your team name in lowercase with hyphens instead of spaces — e.g., `team-alpha`, `cardiff-med`, `ucl-robotics-2`. No special characters. The branch name is how judges identify your submission.
-
-**How do we submit?**
-Push your team branch to GitHub and open a Pull Request against your strand branch (e.g., `team-alpha` → `clinical`). The submission window is **18:00–23:59 on 10 June**.
-
-**Will my work be published or used elsewhere?**
-Strong deployment-centric findings from this hackathon will be considered for contributions to the OMAIB benchmark and future publications. Our previous sprint produced a [perspective paper in *Nature Machine Intelligence*](https://www.nature.com/articles/s42256-025-01116-5) — evaluation work done here has a direct path to publication.
-
-**What should I prepare before the day?**
-On 4 June, your strand guide and starter kit will be sent to you. Open the notebook (or portal files for robotics) in your IDE, confirm everything loads, and run through the starter so you are ready on the day.
-
-**How do I access the strand repository?**
-24 hours before the start time, you will be given access to the GitHub repository. Create a GitHub account if you do not have one. Clone your strand branch, confirm Python 3.11+ is installed, and agree a team name — you will need it for your branch on the day.
+For more information, visit: [UK Open Multimodal AI Network | MultimodalAI'26 Hackathon](https://multimodalai.github.io/multimodalai26/hackathon/#frequently_asked_questions)
 
 ---
 
 ## Questions
 
-**multimodalai26-group@sheffield.ac.uk**
+**Email: multimodalai26-group@sheffield.ac.uk**
 
 *OMAIB — Open Multimodal AI Benchmarks*
