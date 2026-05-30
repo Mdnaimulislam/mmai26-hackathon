@@ -14,12 +14,13 @@ Read **[STRAND_GUIDE.md](STRAND_GUIDE.md)** for the full challenge brief, track 
 
 | Path | Contents |
 |---|---|
-| `federation.json` | Federation manifest template — fill in your team's institution details |
-| `theme.config.json` | Theme configuration template — fill in your brand colours and logo |
-| `iframe-test.html` | Iframe compatibility test — update `src` to your deployed URL |
+| `reference/federation.json` | Federation manifest template — fill in your institution details |
+| `reference/theme.config.json` | Theme configuration template — fill in your brand colour and logo |
+| `reference/iframe-test.html` | Iframe compatibility test — update `src` to your deployed URL |
 | `sub-portals/` | Directory for your campus sub-portal files |
 | `data/` | Dataset released at hackathon start — see `data/README.md` |
 | `validate_submission.py` | Pre-submission validator — run before your demo |
+| `.pre-commit-config.yaml` | Pre-commit hooks — install once, runs the validator automatically |
 
 ---
 
@@ -30,6 +31,7 @@ git checkout -b your-team-name
 ```
 
 All your work goes on your team branch. **Do not commit directly to the robotic branch.**
+Your `node.id` in `reference/federation.json` must match your branch name exactly.
 
 ---
 
@@ -40,13 +42,20 @@ All your work goes on your team branch. **Do not commit directly to the robotic 
 # 2. Create your team branch
 git checkout -b your-team-name
 
-# 3. Deploy your sub-portal (GitHub Pages recommended)
-#    Enable: Settings → Pages → Source: main branch → root or /docs
+# 3. Install pre-commit hooks (runs the validator automatically on each commit)
+pip install pre-commit
+pre-commit install
 
-# 4. Install data analysis dependencies
-pip install -r requirements.txt
+# 4. Deploy your sub-portal (GitHub Pages recommended)
+#    Enable: Settings → Pages → Source: main branch → /sub-portals/your-team-name
+#    Confirm the live URL loads in an incognito browser before filling in node.url
 
-# 5. Validate your submission before the demo
+# 5. Fill in reference/federation.json and reference/theme.config.json
+
+# 6. Test iframe compatibility
+#    Open reference/iframe-test.html, update src to your URL, check DevTools Console
+
+# 7. Validate before the demo
 python validate_submission.py
 ```
 
@@ -58,8 +67,10 @@ python validate_submission.py
 python validate_submission.py
 ```
 
-Checks that `federation.json` and `theme.config.json` are complete and valid.
+Checks that `reference/federation.json` and `reference/theme.config.json` are complete and valid.
 A passing validator is required before your live demo.
+
+The pre-commit hook runs this automatically when you `git commit`.
 
 ---
 

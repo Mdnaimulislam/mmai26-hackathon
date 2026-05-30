@@ -18,15 +18,15 @@ You are allowed to use generative AI throughout the hackathon. However, you must
 
 ## 2. Your Role In This Hackathon
 
-Each team builds one Campus Sub-Portal and federates it with the SONAIR main portal. The main portal (the 3D UK map, the Co-Creation Space, the application server) is provided. You do not modify it. Your job is to build the content layer: a publicly accessible website that represents your lab, a `federation.json` that connects it to the national system, and an evidence dashboard built from the SONAIR dataset.
+Each team builds one Campus Sub-Portal and federates it with the SONAIR main portal. The main portal (the 3D UK map, the Co-Creation Space, the application server) is provided. You do not modify it. Your job is to build the content layer: a publicly accessible website that represents your lab, a `reference/federation.json` that connects it to the national system, and an evidence dashboard built from the SONAIR dataset.
 
 ### What You Build
 
 **A creative campus sub-portal**
 A public website that represents your institution, lab identity, robotics capability, datasets, equipment, and collaboration interests.
 
-**A SONAIR federation file**
-A valid `federation.json` file that allows your sub-portal to be discovered by the SONAIR main portal.
+**A SONAIR federation manifest**
+Fill in `reference/federation.json` with your lab's real details. This file allows your sub-portal to be discovered by the SONAIR main portal.
 
 **A robotics evidence dashboard**
 A page or section that uses the Nottingham/UCL UR robot teleoperation dataset to produce useful plots and interpretation.
@@ -54,7 +54,7 @@ The main portal reads `federation-registry.json` at startup to discover register
 
 ### (b) What a sub-portal adds
 
-When your `federation.json` is valid and registered, the main portal automatically:
+When your `reference/federation.json` is valid and registered, the main portal automatically:
 - highlights your UK administrative region on the 3D map
 - creates your Co-Creation Space card
 - links both to your `node.url`
@@ -77,19 +77,21 @@ Must load without login in an incognito browser. Must not set `X-Frame-Options` 
 
 **Failure:** 404, login required, or placeholder text only.
 
-### B. Federation Manifest (`federation.json`)
+### B. Federation Manifest (`reference/federation.json`)
 
-All 10 fields are required. See Section 13A for the full field reference and Section 13B for the example. Replace every value — the template defaults must not appear in your submission.
+Fill in every field in `reference/federation.json`. All 10 fields are required — see Section 13A for the full field reference and Section 13B for the complete example. Run `python validate_submission.py` to check your manifest before the demo.
 
-### C. Theme Configuration (`theme.config.json`)
+Your sub-portal must also serve the populated manifest at `node.url/federation.json` so the SONAIR main portal can discover it.
 
-Named `theme.config.json` at the repository root. Must contain `institution_name`, `node_name`, `city`, `primary_color`, and `logo_url`. Your sub-portal must read this file using `fetch()` and apply `primary_color` as a CSS variable. Judges will change `primary_color` live during the demo and verify the portal updates within one minute.
+### C. Theme Configuration (`reference/theme.config.json`)
+
+Fill in `reference/theme.config.json`. Must contain `institution_name`, `node_name`, `city`, `primary_color`, and `logo_url`. Your sub-portal must read this file using `fetch()` and apply `primary_color` as a CSS variable. Judges will change `primary_color` live during the demo and verify the portal updates within one minute.
 
 **Failure:** file absent or portal ignores it.
 
 ### D. Iframe Compatibility
 
-Your sub-portal must load cleanly inside an `<iframe>`. Use `iframe-test.html` from this repository (update `src` to your URL). Open DevTools Console: no `X-Frame-Options` or `Content-Security-Policy frame-ancestors` errors. Plain `github.io` URLs do not set these headers by default.
+Your sub-portal must load cleanly inside an `<iframe>`. Open `reference/iframe-test.html`, update the `src` to your deployed URL, and open it in a browser. Check DevTools Console: no `X-Frame-Options` or `Content-Security-Policy frame-ancestors` errors. Plain `github.io` URLs do not set these headers by default.
 
 **Failure:** console error or blank frame.
 
@@ -127,15 +129,15 @@ Builds the Campus Sub-Portal frontend. Responsible for the public-facing design,
 
 ### The Connector
 
-Writes and validates `federation.json` and `theme.config.json`. Responsible for iframe compatibility and verifying the portal renders correctly inside SONAIR.
+Fills in `reference/federation.json` and `reference/theme.config.json`. Responsible for iframe compatibility and verifying the portal renders correctly inside SONAIR.
 
-**First 30 minutes:** Fork repo, enable GitHub Pages, clone locally, create `sub-portals/YOUR-UNI/` directory, confirm live URL in incognito. This is the critical path — Builder and Data Engineer are blocked until this is done.
+**First 30 minutes:** Fork repo, create your team branch, enable GitHub Pages, clone locally, create `sub-portals/YOUR-UNI/` directory with a minimal `index.html`, confirm live URL in incognito. This is the critical path — Builder and Data Engineer are blocked until this is done.
 
 ### The Data Engineer
 
 Builds the robot data dashboard.
 
-**First 30 minutes:** Download dataset. Parse timestamps to UTC. Compute mean RTT, P95 RTT, packet loss. Build RTT time-series plot and command latency histogram. Export charts as browser-displayable SVG/PNG or inline Chart.js. Hand off to Builder. Verify dashboard renders at public URL.
+**First 30 minutes:** Download dataset from the link provided at the event. Parse timestamps to UTC. Compute mean RTT, P95 RTT, packet loss. Build RTT time-series plot and command latency histogram. Export charts as browser-displayable SVG/PNG or inline Chart.js. Hand off to Builder. Verify dashboard renders at public URL.
 
 ---
 
@@ -145,11 +147,11 @@ Builds the robot data dashboard.
 |---|---|---|
 | Federation | Independent websites sharing a common standard so they discover each other automatically. | SONAIR reads `federation-registry.json` at startup and renders every valid manifest on the UK map. |
 | Sub-Portal | A self-contained website meeting the federation standard, embeddable in the main portal. | Your deliverable: a public website at your own URL that must load cleanly in an iframe. |
-| `federation.json` | A JSON file at the repo root declaring who you are and where your portal is. | `validateFederationManifest()` checks all 10 fields. One invalid field = node rejected. |
+| `federation.json` | A JSON file declaring who you are and where your portal is. | Fill in `reference/federation.json`. `validateFederationManifest()` checks all 10 fields. One invalid field = node rejected. |
 | `federation-registry.json` | The organiser-controlled list of all participant manifest URLs. | Organiser adds your URL here; refresh the main portal to onboard your node. |
 | Iframe | An HTML element that displays one website inside another. | Do not set `X-Frame-Options: DENY` or your portal will not embed. |
-| `theme.config.json` | One file controlling your portal's colours, logo, and name without touching code. | Changing `primary_color` updates the portal within one minute after redeploy. |
-| Co-Creation Space | The project board on the main portal showing all connected universities. | Auto-generated from `co_creation_card` in your `federation.json`. |
+| `theme.config.json` | One file controlling your portal's colours, logo, and name without touching code. | Fill in `reference/theme.config.json`. Changing `primary_color` updates the portal within one minute after redeploy. |
+| Co-Creation Space | The project board on the main portal showing all connected universities. | Auto-generated from `co_creation_card` in your `reference/federation.json`. |
 | Map pin / region | The glowing highlight on the UK map for each connected university. | `node.lat` and `node.lon` place your pin; `node.color` sets its colour. |
 | Trust mechanism | The process by which the main portal decides whether to show your sub-portal. | A valid `federation.json` is the trust act; invalid manifests show as visible warnings. |
 | RTT (Round-Trip Time) | Time in milliseconds for a network packet to travel to its destination and back. | Stored in `rtt_ms` in `network_samples.csv`. Use as the y-axis of the time-series plot. |
@@ -168,12 +170,10 @@ The submission is a 2.5-minute live demo covering the federation layer and the e
 All five items must pass before the demo session begins. Connector owns items 2–4; Builder owns item 1; Data Engineer owns item 5.
 
 - [ ] Sub-portal is live and publicly accessible (no login required)
-- [ ] `federation.json` present at repo root and valid against the required format
-- [ ] `theme.config.json` updates the portal colour when changed
-- [ ] Portal embeds cleanly in `iframe-test.html` with no console errors
+- [ ] `reference/federation.json` is filled in and passes `python validate_submission.py`
+- [ ] `reference/theme.config.json` updates the portal colour when `primary_color` is changed
+- [ ] Portal embeds cleanly in `reference/iframe-test.html` with no console errors
 - [ ] Evidence dashboard is embedded in the sub-portal with both charts generated from the dataset and a written interpretation on the page
-
-Run `python validate_submission.py` to check items 2 and 3 automatically.
 
 ### Final Presentation (2.5 minutes)
 
@@ -181,7 +181,7 @@ Cover all six points:
 
 1. **What you built** — Show the live sub-portal and explain the concept behind it.
 2. **Why it is designed this way** — Explain your creative choices, layout, branding, and intended audience.
-3. **How it connects to SONAIR** — Show the `federation.json` file and explain how your node could be discovered by the main SONAIR portal.
+3. **How it connects to SONAIR** — Show `reference/federation.json` and explain how your node could be discovered by the main SONAIR portal.
 4. **What the robot data shows** — Present your plots and explain what you found in the UR robot teleoperation dataset.
 5. **Your proposed metric** — Explain your latency, synchronisation, or sim-to-real metric and why it matters.
 6. **How you used GenAI** — Explain where GenAI helped, where it failed, and what human judgement your team added.
@@ -191,7 +191,7 @@ The strongest presentations will not simply show that something works. They will
 ### Stretch Goals (if time permits)
 
 - Annotate the RTT plot with GRANT/RELEASE/ESTOP events from `session_audit.csv`
-- JSON schema validator or GitHub Action for `federation.json`
+- JSON schema validator or GitHub Action for `reference/federation.json`
 - Accessibility improvements: semantic headings, alt text, strong colour contrast
 
 ---
@@ -201,7 +201,7 @@ The strongest presentations will not simply show that something works. They will
 | Category | Weighting | What judges are looking for |
 |---|---|---|
 | Sub-portal creativity and clarity | 25% | A clear, engaging, visually considered portal that represents a lab or institution well. It should feel purposeful, not like a generic template. |
-| SONAIR federation readiness | 15% | A working deployed portal, valid `federation.json`, and basic compatibility with the SONAIR federation concept. |
+| SONAIR federation readiness | 15% | A working deployed portal, valid `reference/federation.json`, and basic compatibility with the SONAIR federation concept. |
 | Data analysis and plots | 25% | Meaningful plots from the UR robot teleoperation dataset, with sensible handling of timestamps, latency, delay, or synchronisation. |
 | Proposed metric | 15% | A clear and defensible metric that could help describe latency, synchronisation, sim-to-real transfer, or remote-to-real behaviour. |
 | Final presentation and GenAI use | 20% | Clear explanation of the portal, data findings, metric, design choices, and limitations. Thoughtful use of GenAI, with explanation of what it helped with and what decisions were made by the team. |
@@ -211,8 +211,8 @@ The strongest presentations will not simply show that something works. They will
 | Criterion | Weak | Strong |
 |---|---|---|
 | Sub-portal content | Template placeholder text only. No equipment list, no contact email. | Real institution name, specific equipment (model numbers), dataset details, and a contact email. |
-| `federation.json` | All 10 fields present but lat/lon still at template defaults. Wrong map region. | All 10 fields with real values. Correct coordinates. Meaningful `co_creation_card.description`. |
-| Theme config | `theme.config.json` present but portal ignores it. `primary_color` hard-coded in HTML. | `fetch()` reads `theme.config.json` on load. Colour change propagates in under 60 seconds. |
+| `reference/federation.json` | All 10 fields present but lat/lon still at template defaults. Wrong map region. | All 10 fields with real values. Correct coordinates. Meaningful `co_creation_card.description`. |
+| `reference/theme.config.json` | File present but portal ignores it. `primary_color` hard-coded in HTML. | `fetch()` reads `reference/theme.config.json` on load. Colour change propagates in under 60 seconds. |
 | Evidence dashboard | Dashboard section absent or charts are screenshots. Interpretation missing. | RTT plot and latency histogram generated from the provided CSV/JSON. Interpretation cites real numbers and addresses operator safety. |
 | Demo and governance | Fewer than 3 steps completed. Cannot explain governance choice or data findings. | All five steps in 2.5 minutes. Governance and data interpretation both explained with specific numbers. |
 
@@ -224,36 +224,36 @@ The Connector's first 30 minutes are the critical path — all other roles are b
 
 | Role | First 30-minute tasks | Why this order |
 |---|---|---|
-| Connector | Fork repo, enable GitHub Pages, clone locally, create `sub-portals/YOUR-UNI/` directory, start with a minimal `index.html`, confirm live URL in incognito. | Builder cannot test iframe until URL is public. All other work depends on this. |
+| Connector | Fork repo, create team branch, enable GitHub Pages, clone locally, create `sub-portals/YOUR-UNI/` with a minimal `index.html`, confirm live URL in incognito. Fill in `reference/federation.json` with real `node.id` matching your branch name. | Builder cannot test iframe until URL is public. All other work depends on this. |
 | Builder | Study Nottingham reference. Write content outline (identity, equipment, datasets, collaboration). Begin `index.html` with theme `fetch()`. | Content takes the most time. Starting from an outline ensures substantive output. |
-| Data Engineer | Download dataset. Parse `ts` to UTC datetime. Compute mean RTT, P95, packet loss. Produce first RTT plot draft. | A working plot in the first 30 minutes confirms the data pipeline works and leaves time to refine. |
+| Data Engineer | Download dataset from the link provided at the event. Parse `ts` to UTC datetime. Compute mean RTT, P95, packet loss. Produce first RTT plot draft. | A working plot in the first 30 minutes confirms the data pipeline works and leaves time to refine. |
 
 ---
 
 ## 11. SONAIR Reference
 
-Keep this section open during the build. Field names and validation rules match `validateFederationManifest()` exactly.
+Keep this section open during the build. Field names and validation rules match `validateFederationManifest()` and `python validate_submission.py` exactly.
 
-### 13A. `federation.json` — Complete Field Reference
+### 13A. `reference/federation.json` — Complete Field Reference
 
-All 10 fields are required. A single missing or out-of-range value causes the node to be skipped with a warning.
+All 10 fields are required. A single missing or out-of-range value causes the node to be skipped with a warning. Run `python validate_submission.py` to check all fields before the demo.
 
 | Field | Type | Description | Example / Rule |
 |---|---|---|---|
-| `node.id` | String | Unique lowercase identifier, no spaces. | `"your-uni-id"` e.g. `"edinburgh"` |
+| `node.id` | String | Unique lowercase identifier, no spaces. Must match your git branch name. | `"your-uni-id"` e.g. `"edinburgh"` |
 | `node.name` | String | Full official institution name. | `"Your University Full Name"` |
 | `node.city` | String | City where the lab is located. | `"Your City"` |
-| `node.lat` | Number | Latitude. UK range: 49–61. Do not use template default. | Replace `53.3814` with your real latitude |
-| `node.lon` | Number | Longitude. UK range: -8 to 2. Do not use template default. | Replace `-1.4884` with your real longitude |
+| `node.lat` | Number | Latitude. UK range: 49–61. Do not use template default. | Replace `99.9999` with your real latitude |
+| `node.lon` | Number | Longitude. UK range: -8 to 2. Do not use template default. | Replace `-9.9999` with your real longitude |
 | `node.color` | String | Hex colour for the map pin. | `"#72F5B8"` (use your brand colour) |
 | `node.url` | String | Full HTTPS URL of your sub-portal. Must be publicly reachable. | `"https://your-uni.github.io/sonair-portal"` |
 | `co_creation_card.title` | String | Short project title on the Co-Creation card. | `"Your Lab Project Title"` |
 | `co_creation_card.tags` | Array | 2–5 keyword strings. Must be a JSON array. | `["Robotics", "YourTag"]` |
 | `co_creation_card.description` | String | 1–2 sentences: your equipment or datasets. This is your governance statement. | Write your own — do not copy the template default. |
 
-### 13B. `federation.json` Example
+### 13B. `reference/federation.json` Example
 
-Replace **every** value. The defaults shown (Sheffield, 53.3814, -1.4884) must **not** appear in your submission.
+Replace **every** value. The template defaults (`99.9999`, `-9.9999`, `#YOUR_BRAND_HEX`) must **not** appear in your submission.
 
 ```json
 {
@@ -269,16 +269,16 @@ Replace **every** value. The defaults shown (Sheffield, 53.3814, -1.4884) must *
   "co_creation_card": {
     "title": "Your Lab Project Title",
     "tags": ["YourTag1", "Robotics"],
-    "description": "Describe your real equipment and collaboration needs."
+    "description": "Describe your real equipment and collaboration needs in 1-2 sentences."
   }
 }
 ```
 
 ### 13C. Iframe Compatibility Test
 
-Open `iframe-test.html` from this repository, change `src` to your URL, open in a browser. Open DevTools (F12) → Console. No `X-Frame-Options` or `Content-Security-Policy frame-ancestors` errors should appear. Plain `github.io` URLs do not set these headers by default.
+Open `reference/iframe-test.html`, change `src` to your deployed URL, and open it in a browser. Open DevTools (F12) → Console. No `X-Frame-Options` or `Content-Security-Policy frame-ancestors` errors should appear. Plain `github.io` URLs do not set these headers by default.
 
-### 13D. `theme.config.json` — Field Reference
+### 13D. `reference/theme.config.json` — Field Reference
 
 | Field | Type | Description | Example |
 |---|---|---|---|
@@ -290,11 +290,11 @@ Open `iframe-test.html` from this repository, change `src` to your URL, open in 
 
 ### 13E. Adding Your Node to the Registry
 
-Once `federation.json` is live, give the organiser your manifest URL. They add it to `federation-registry.json`. Refreshing the main portal then automatically connects your node, highlights your map region, and adds your Co-Creation card.
+Once `reference/federation.json` is filled in and your sub-portal is live, give the organiser your manifest URL. They add it to `federation-registry.json`. Refreshing the main portal then automatically connects your node, highlights your map region, and adds your Co-Creation card.
 
 ### 13F. SONAIR UR5e Telemetry Dataset — File Reference
 
-The dataset ZIP is provided at the start of the hackathon. All files are from a 15-minute UCL–Nottingham UR5e teleoperation session. All timestamps use ISO 8601 UTC format.
+The dataset ZIP is provided at the start of the hackathon. Extract into `data/`. All files are from a 15-minute UCL–Nottingham UR5e teleoperation session. All timestamps use ISO 8601 UTC format.
 
 | File | Format | Key fields | Use in dashboard |
 |---|---|---|---|
