@@ -1,0 +1,7 @@
+{
+  "institution_name": "Your University Full Name",
+  "node_name": "Your Lab Node Name",
+  "city": "Your City",
+  "primary_color": "#YOUR_BRAND_HEX",
+  "logo_url": "./assets/logo.png"
+}

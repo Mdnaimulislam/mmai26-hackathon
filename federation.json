@@ -1,0 +1,16 @@
+{
+  "node": {
+    "id": "your-uni-id",
+    "name": "Your University Full Name",
+    "city": "Your City",
+    "lat": 99.9999,
+    "lon": -9.9999,
+    "color": "#YOUR_BRAND_HEX",
+    "url": "https://your-uni.github.io/sonair-portal"
+  },
+  "co_creation_card": {
+    "title": "Your Lab Project Title",
+    "tags": ["YourTag1", "Robotics"],
+    "description": "Describe your real equipment and collaboration needs in 1-2 sentences. This is your governance statement."
+  }
+}
