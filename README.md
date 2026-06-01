@@ -50,6 +50,8 @@ Each team builds a solution grounded in the clinical dataset and produces a stru
 
 *Track roles:* The Builder · The Evidence Analyst · The Governance Lead
 
+Refer to the clinical strand guide for more information.
+
 ---
 
 ### Housing Strand
@@ -81,6 +83,8 @@ Each team builds a solution grounded in the housing dataset and produces a struc
 
 *Track roles:* The Builder · The Evidence Analyst · The Governance Lead
 
+Refer to the housing strand guide for more information.
+
 ---
 
 ### Robotics Strand
@@ -92,7 +96,7 @@ A robot lab's findings sit in a silo. They cannot be discovered, verified, or bu
 
 **Challenge options — choose one:**
 1. **Sim-to-real gap metric design** — Design, implement, and validate a novel metric quantifying the simulation-to-real gap using the UCL–Nottingham UR5e teleoperation dataset, surfaced in the dashboard alongside supporting visualisations and a written metric proposal.
-2. **Federated evidence governance** — Treat the federation manifest as a governance document. Design a structured evidence card format for the SONAIR ecosystem, implement at least one evidence card for the UR5e dataset, and include a written governance policy explaining what your team chose to publish, what to withhold, and why.
+2. **Federated evidence governance** — Treat the federation manifest as a governance document. Design a structured evidence card format for the SONAIR ecosystem, implement evidence cards for the UR5e dataset, and include a written governance policy explaining what your team chose to publish, what to withhold, and why.
 3. **Accessible co-creation portal** — Build the most usable, practitioner-ready campus sub-portal on the strand. Prioritise accessibility, conduct a brief usability test with at least two people outside your team, and propose one concrete, implementable improvement on the page.
 
 ### What You Build
@@ -104,9 +108,10 @@ A robot lab's findings sit in a silo. They cannot be discovered, verified, or bu
 - **Robot Data Dashboard** — an RTT time-series plot, a command latency histogram, and a written interpretation on the page, built from the UCL–Nottingham UR5e teleoperation dataset
 
 
-*Modalities:* lab capability metadata, robot dataset registries, federation manifests (JSON), institution profiles, web configuration
 
 *Track roles:* The Builder · The Connector · The Data Engineer
+
+Refer to the Robotic strand guide for more information.
 
 ---
 
@@ -123,7 +128,7 @@ A robot lab's findings sit in a silo. They cannot be discovered, verified, or bu
 | **14:00** | 16:00 | Phase 2 / Phase 3: building continues and teams converge on the final report |
 | **16:00** | 16:30 | Tea and coffee break |
 | **16:30** | 18:00 | Final push — packaging, submission forms, demo prep |
-| **18:00+** | — | Submission — open your PR against your strand branch |
+| **18:00+** |  | Submission — open your PR against your strand branch |
 
 ---
 
@@ -146,8 +151,6 @@ pip install -r requirements.txt
 jupyter notebook notebooks/
 ```
 
-> **Robotics strand only:** the deliverable is a web portal. After cloning, open `index.html` and the accompanying JSON config files. No `pip install` is required unless you are building a Python-backed dashboard component.
-
 **Immediately after cloning, create your team branch:**
 
 ```bash
@@ -157,7 +160,7 @@ git checkout -b your-team-name
 
 All your work goes on your team branch. **Do not commit directly to the strand branch.**
 
-Read `STRAND_GUIDE.md` first — it explains the task, the data, your track role, and the deliverables you must complete before the demo.
+Read `STRAND_GUIDE.md` first — it explains the task, the data, your track role, and the deliverables you must complete before your demo on the 11 June workshop day.
 
 ---
 
@@ -181,7 +184,7 @@ git push origin your-team-name
 
 **Your PR must include all mandatory core deliverables for your strand, plus your option-specific output.**
 
-Refer to 'what must be built' section above to understand what must be included in your submission.
+Refer to 'what must be built' section above and the strand guide to understand what must be included in your submission.
 
 **Submission window: 18:00–23:59 on 10 June.** Push your code to your GitHub team branch and open the PR during this window.
 
@@ -208,11 +211,11 @@ Pre-commit hooks run automatically on every commit.
 Each strand is designed for a team of 2–4, with parallel track roles during the build phase and a full-team convergence for the final report and demo. A team of 2 is tight but achievable; 5 or more leads to idle members during the analysis and interpretation steps.
 
 **Ideal skill mix** — you need at least one person from each of these buckets:
-- Someone comfortable with Python and pandas — or HTML/CSS/JavaScript for the robotics strand
+- Someone comfortable with code and data tooling — the specific language and tools are your team's choice
 - Someone with domain interest (clinical, housing, or robotics — you don't need to be an expert)
 - Someone who can write a clear, plain-English paragraph
 
-**AI coding assistants** (GitHub Copilot, Claude, ChatGPT) are allowed and encouraged. You must disclose what you used in your submission PR description — judges ask questions during the demo to verify understanding.
+AI coding assistants are allowed and encouraged. You must disclose what you used in your submission PR description — judges ask questions during the demo to verify understanding.
 
 ---
 
@@ -228,16 +231,28 @@ Each strand is designed for a team of 2–4, with parallel track roles during th
 
 ## Judging Criteria
 
-All strands are judged on the same three criteria:
+The clinical and housing strands are judged on the same criteria. The robotics strand is judged on different criteria — see the Strand Guide on the `robotic` branch.
+
+**Clinical and housing strands:**
 
 | Criterion | Weight | What it means |
 |---|---|---|
-| **Creativity** | 15% | Original approach with a clear point of view; the solution and evidence framing say something distinctive about the team's perspective and the clinical problem |
+| **Creativity** | 15% | Original approach with a clear point of view; the solution and evidence framing say something distinctive about the team's perspective and the problem |
 | **Evidence quality** | 35% | Are your findings specific and backed by evidence drawn from the data? Did you surface concrete problems or trust gaps — not just describe their possibility? |
-| **Clarity** | 25% | Could a non-technical practitioner — a clinician, housing officer, or robotics researcher — understand and act on your output? |
+| **Clarity** | 25% | Could a non-technical practitioner — a clinician or housing officer — understand and act on your output? |
 | **Deployability** | 25% | How close is your deliverable to something the domain team could actually publish, adopt, or act on? |
 
-Judges will ask questions during the demo session. Your team needs to understand what you built and why you made the decisions you made — not just show a working notebook.
+**Robotics strand:**
+
+| Criterion | Weight | What it means |
+|---|---|---|
+| **Sub-portal creativity and clarity** | 25% | A clear, engaging portal that represents a lab or institution well — purposeful, not a generic template |
+| **SONAIR federation readiness** | 15% | A working deployed portal, valid `federation.json`, and basic compatibility with the SONAIR federation concept |
+| **Data analysis and plots** | 25% | Meaningful plots from the UR robot teleoperation dataset, with sensible handling of timestamps, latency, delay, or synchronisation |
+| **Proposed metric** | 15% | A clear and defensible metric that could help describe latency, synchronisation, or sim-to-real behaviour |
+| **Final presentation and GenAI use** | 20% | Clear explanation of the portal, data findings, metric, design choices, and limitations |
+
+Judges will ask questions during the demo session. Your team needs to understand what you built and why you made the decisions you made.
 
 ---
 
@@ -255,8 +270,9 @@ Three teams will be recognised:
 
 ## What to Bring
 
-- A laptop with **Python 3.11+** installed and a Jupyter Notebook-supported IDE (VS Code with the Jupyter extension, JupyterLab, or PyCharm)
-- A **GitHub account** — you will need to push your team branch and open a PR during the submission window (18:00–23:59)
+- Bring a laptop with **Python 3.11+** installed.
+- Install any IDE or code editor of your choice.
+- Create a **GitHub account** if you do not already have one.
 - Your team (or arrive solo — team formation time is built into the programme)
 
 ---
