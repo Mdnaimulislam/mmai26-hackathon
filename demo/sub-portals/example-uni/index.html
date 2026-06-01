@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SONAIR — Example sub-portal</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background: #f5f5f5;
+    }
+    header {
+      padding: 1.25rem 1.5rem;
+      color: #fff;
+    }
+    header h1 { margin: 0; font-size: 1.35rem; }
+    header p { margin: 0.35rem 0 0; font-size: 0.9rem; opacity: 0.92; }
+    main { max-width: 42rem; margin: 0 auto; padding: 1.5rem; }
+    .error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 1rem 1.25rem;
+      margin: 1rem 1.5rem 0;
+      border-radius: 6px;
+      display: none;
+    }
+    .error.visible { display: block; }
+    section {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-top: 1rem;
+    }
+    section h2 { margin: 0 0 0.75rem; font-size: 1.1rem; }
+    .placeholder {
+      color: #525252;
+      font-size: 0.95rem;
+      border: 2px dashed #d4d4d4;
+      border-radius: 6px;
+      padding: 1rem;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header" style="background:#6b7280">
+    <h1 id="node-title">Loading…</h1>
+    <p id="node-city"></p>
+  </header>
+  <div id="load-error" class="error" role="alert"></div>
+  <main>
+    <p>This is an <strong>illustrative example</strong> sub-portal for the SONAIR robotics strand. Teams should replace this page with their own lab content.</p>
+    <section>
+      <h2>Data Dashboard</h2>
+      <div class="placeholder">
+        Teams add their teleoperation data dashboard here — see
+        <code>demo/notebooks/01_data_explore.ipynb</code> for an example
+        analysis flow.
+      </div>
+    </section>
+  </main>
+  <script>
+    const THEME_URL = "../../../reference/theme.config.json";
+    const FALLBACK_COLOR = "#6b7280";
+    const PLACEHOLDER_HEX = "#YOUR_BRAND_HEX";
+
+    function resolveColor(theme) {
+      const raw = (theme.node && theme.node.color) || theme.primary_color || "";
+      const c = String(raw).trim();
+      if (!c || c.toUpperCase() === PLACEHOLDER_HEX || !/^#[0-9A-Fa-f]{6}$/.test(c)) {
+        return FALLBACK_COLOR;
+      }
+      return c;
+    }
+
+    function resolveNode(theme) {
+      const node = theme.node || {};
+      return {
+        name: node.name || theme.node_name || "Unknown node",
+        city: node.city || theme.city || "",
+      };
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("load-error");
+      el.textContent = msg;
+      el.classList.add("visible");
+      document.getElementById("node-title").textContent = "Theme config not loaded";
+      document.getElementById("node-city").textContent = "";
+    }
+
+    fetch(THEME_URL)
+      .then((res) => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then((theme) => {
+        const { name, city } = resolveNode(theme);
+        document.getElementById("site-header").style.background = resolveColor(theme);
+        document.getElementById("node-title").textContent = name;
+        document.getElementById("node-city").textContent = city;
+      })
+      .catch(() => {
+        showError(
+          "Could not load theme.config.json. Serve this repo from the root " +
+          "(e.g. python -m http.server) — opening via file:// will not work."
+        );
+      });
+  </script>
+</body>
+</html>
