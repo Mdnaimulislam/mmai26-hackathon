@@ -21,6 +21,7 @@ References:
     Fusion: kale.embed.multimodal_fusion.Concat
     Encoder: kale.embed.nn.FCNet
 """
+
 from __future__ import annotations
 
 import io
@@ -41,11 +42,18 @@ TARGET = "major_complication_30d"
 # ── Feature groups ────────────────────────────────────────────────────────────
 
 TABULAR_FEATURES = [
-    "surgery_enc", "urgency_enc", "asa_class", "op_duration_h",
-    "blood_loss_imputed", "blood_loss_missing", "transfused",
-    "has_diabetes", "has_hypertension",
-    "preop_creatinine", "sofa_score",
-    "has_notes",          # modality availability flag
+    "surgery_enc",
+    "urgency_enc",
+    "asa_class",
+    "op_duration_h",
+    "blood_loss_imputed",
+    "blood_loss_missing",
+    "transfused",
+    "has_diabetes",
+    "has_hypertension",
+    "preop_creatinine",
+    "sofa_score",
+    "has_notes",  # modality availability flag
 ]
 
 FEATURES = TABULAR_FEATURES  # alias for consistency across strands
@@ -56,17 +64,18 @@ FEATURES = TABULAR_FEATURES  # alias for consistency across strands
 # late_early_* : mean(h18-24) - mean(h0-6) as a direction-of-change indicator
 TS_VITALS = ["hr", "rr", "spo2", "sbp", "temp", "lactate"]
 TS_FEATURES = (
-    [f"slope_{v}"      for v in TS_VITALS]
-    + [f"std_{v}"      for v in TS_VITALS]
+    [f"slope_{v}" for v in TS_VITALS]
+    + [f"std_{v}" for v in TS_VITALS]
     + [f"late_early_{v}" for v in TS_VITALS]
 )
 
 TFIDF_MAX_FEATURES = 200
-EMB_DIM = 24          # shared embedding size for each modality branch
-DROPOUT  = 0.30
+EMB_DIM = 24  # shared embedding size for each modality branch
+DROPOUT = 0.30
 
 
 # ── Time series feature extractor ─────────────────────────────────────────────
+
 
 def extract_ts_features(vitals_df: pd.DataFrame, patient_ids: list[str]) -> np.ndarray:
     """
@@ -82,14 +91,14 @@ def extract_ts_features(vitals_df: pd.DataFrame, patient_ids: list[str]) -> np.n
     np.ndarray of shape (n_patients, 18)
     """
     rows = []
-    grp  = vitals_df.groupby("patient_id")
+    grp = vitals_df.groupby("patient_id")
 
     for pid in patient_ids:
         if pid not in grp.groups:
             rows.append(np.zeros(len(TS_FEATURES)))
             continue
 
-        pv    = grp.get_group(pid).sort_values("hour")
+        pv = grp.get_group(pid).sort_values("hour")
         hours = pv["hour"].values.astype(float)
         feats = []
 
@@ -102,11 +111,15 @@ def extract_ts_features(vitals_df: pd.DataFrame, patient_ids: list[str]) -> np.n
             else:
                 slope = 0.0
 
-            std   = float(np.std(vals))
+            std = float(np.std(vals))
 
             early = vals[hours <= 6]
-            late  = vals[hours >= 18]
-            late_early = (float(late.mean()) - float(early.mean())) if (len(early) > 0 and len(late) > 0) else 0.0
+            late = vals[hours >= 18]
+            late_early = (
+                (float(late.mean()) - float(early.mean()))
+                if (len(early) > 0 and len(late) > 0)
+                else 0.0
+            )
 
             feats.extend([slope, std, late_early])
 
@@ -117,14 +130,17 @@ def extract_ts_features(vitals_df: pd.DataFrame, patient_ids: list[str]) -> np.n
 
 # ── PyKale fusion network ─────────────────────────────────────────────────────
 
+
 class _FusionNet(nn.Module):
     def __init__(self, n_tab: int, n_tfidf: int, n_ts: int, emb: int, dropout: float):
         super().__init__()
-        self.tab_enc  = FCNet([n_tab,   emb * 2, emb], activation="ReLU", dropout=dropout)
-        self.text_enc = FCNet([n_tfidf, emb * 2, emb], activation="ReLU", dropout=dropout)
-        self.ts_enc   = FCNet([n_ts,    emb * 2, emb], activation="ReLU", dropout=dropout)
-        self.concat   = Concat()
-        self.head     = nn.Sequential(
+        self.tab_enc = FCNet([n_tab, emb * 2, emb], activation="ReLU", dropout=dropout)
+        self.text_enc = FCNet(
+            [n_tfidf, emb * 2, emb], activation="ReLU", dropout=dropout
+        )
+        self.ts_enc = FCNet([n_ts, emb * 2, emb], activation="ReLU", dropout=dropout)
+        self.concat = Concat()
+        self.head = nn.Sequential(
             nn.Linear(emb * 3, emb),
             nn.ReLU(),
             nn.Dropout(dropout),
@@ -133,18 +149,19 @@ class _FusionNet(nn.Module):
 
     def forward(
         self,
-        x_tab:  torch.Tensor,
+        x_tab: torch.Tensor,
         x_text: torch.Tensor,
-        x_ts:   torch.Tensor,
+        x_ts: torch.Tensor,
     ) -> torch.Tensor:
-        e_tab  = self.tab_enc(x_tab)
+        e_tab = self.tab_enc(x_tab)
         e_text = self.text_enc(x_text)
-        e_ts   = self.ts_enc(x_ts)
-        fused  = self.concat([e_tab, e_text, e_ts])
+        e_ts = self.ts_enc(x_ts)
+        fused = self.concat([e_tab, e_text, e_ts])
         return self.head(fused)
 
 
 # ── Sklearn-compatible wrapper ────────────────────────────────────────────────
+
 
 class ModelA(BaseEstimator, ClassifierMixin):
     """
@@ -167,23 +184,23 @@ class ModelA(BaseEstimator, ClassifierMixin):
         batch_size: int = 64,
         random_state: int = 42,
     ):
-        self.emb_dim      = emb_dim
-        self.dropout      = dropout
-        self.tfidf_max    = tfidf_max
-        self.lr           = lr
-        self.epochs       = epochs
-        self.batch_size   = batch_size
+        self.emb_dim = emb_dim
+        self.dropout = dropout
+        self.tfidf_max = tfidf_max
+        self.lr = lr
+        self.epochs = epochs
+        self.batch_size = batch_size
         self.random_state = random_state
 
-        self._tab_scaler  = StandardScaler()
-        self._ts_scaler   = StandardScaler()
-        self._tfidf       = TfidfVectorizer(
+        self._tab_scaler = StandardScaler()
+        self._ts_scaler = StandardScaler()
+        self._tfidf = TfidfVectorizer(
             max_features=tfidf_max,
             sublinear_tf=True,
             ngram_range=(1, 2),
         )
-        self._net         = None
-        self.classes_     = np.array([0, 1])
+        self._net = None
+        self.classes_ = np.array([0, 1])
 
     # ── helpers ───────────────────────────────────────────────────────────────
 
@@ -194,7 +211,11 @@ class ModelA(BaseEstimator, ClassifierMixin):
         vitals_df: pd.DataFrame | None,
         fit_mode: bool,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        pids = list(X["patient_id"]) if "patient_id" in X.columns else list(X.index.astype(str))
+        pids = (
+            list(X["patient_id"])
+            if "patient_id" in X.columns
+            else list(X.index.astype(str))
+        )
 
         # Tabular branch
         Xtab = X[TABULAR_FEATURES].values.astype(np.float32)
@@ -246,12 +267,14 @@ class ModelA(BaseEstimator, ClassifierMixin):
         Xtab, Xtext, Xts = self._prepare(X, notes_df, vitals_df, fit_mode=True)
         yn = torch.from_numpy(np.array(y, dtype=np.int64))
 
-        self._n_tab   = Xtab.shape[1]
+        self._n_tab = Xtab.shape[1]
         self._n_tfidf = Xtext.shape[1]
-        self._n_ts    = Xts.shape[1]
+        self._n_ts = Xts.shape[1]
 
-        self._net = _FusionNet(self._n_tab, self._n_tfidf, self._n_ts, self.emb_dim, self.dropout)
-        opt     = torch.optim.Adam(self._net.parameters(), lr=self.lr, weight_decay=1e-4)
+        self._net = _FusionNet(
+            self._n_tab, self._n_tfidf, self._n_ts, self.emb_dim, self.dropout
+        )
+        opt = torch.optim.Adam(self._net.parameters(), lr=self.lr, weight_decay=1e-4)
         loss_fn = nn.CrossEntropyLoss()
 
         n = len(yn)
@@ -259,7 +282,7 @@ class ModelA(BaseEstimator, ClassifierMixin):
         for _ in range(self.epochs):
             perm = torch.randperm(n)
             for start in range(0, n, self.batch_size):
-                idx = perm[start: start + self.batch_size]
+                idx = perm[start : start + self.batch_size]
                 opt.zero_grad()
                 logits = self._net(Xtab[idx], Xtext[idx], Xts[idx])
                 loss_fn(logits, yn[idx]).backward()
@@ -285,7 +308,7 @@ class ModelA(BaseEstimator, ClassifierMixin):
         Xtab, Xtext, Xts = self._prepare(X, notes_df, vitals_df, fit_mode=False)
         with torch.no_grad():
             logits = self._net(Xtab, Xtext, Xts)
-            probs  = torch.softmax(logits, dim=1).numpy()
+            probs = torch.softmax(logits, dim=1).numpy()
         return probs
 
     def predict(self, X: pd.DataFrame, threshold: float = 0.5) -> np.ndarray:
@@ -298,10 +321,12 @@ class ModelA(BaseEstimator, ClassifierMixin):
         try:
             w_g = self._net.tab_enc.main[1].weight_g.detach()
             w_v = self._net.tab_enc.main[1].weight_v.detach()
-            w   = (w_g * w_v / w_v.norm(dim=1, keepdim=True)).abs().mean(dim=0).numpy()
+            w = (w_g * w_v / w_v.norm(dim=1, keepdim=True)).abs().mean(dim=0).numpy()
         except AttributeError:
             w = self._net.tab_enc.main[1].weight.detach().abs().mean(dim=0).numpy()
-        return pd.Series(w[:len(TABULAR_FEATURES)], index=TABULAR_FEATURES).sort_values(ascending=False)
+        return pd.Series(
+            w[: len(TABULAR_FEATURES)], index=TABULAR_FEATURES
+        ).sort_values(ascending=False)
 
     # ── serialisation (joblib) ────────────────────────────────────────────────
 
@@ -309,12 +334,15 @@ class ModelA(BaseEstimator, ClassifierMixin):
         state = self.__dict__.copy()
         if self._net is not None:
             buf = io.BytesIO()
-            torch.save({
-                "state_dict": self._net.state_dict(),
-                "n_tab":   self._n_tab,
-                "n_tfidf": self._n_tfidf,
-                "n_ts":    self._n_ts,
-            }, buf)
+            torch.save(
+                {
+                    "state_dict": self._net.state_dict(),
+                    "n_tab": self._n_tab,
+                    "n_tfidf": self._n_tfidf,
+                    "n_ts": self._n_ts,
+                },
+                buf,
+            )
             state["_net_bytes"] = buf.getvalue()
         state.pop("_net", None)
         return state
@@ -325,8 +353,11 @@ class ModelA(BaseEstimator, ClassifierMixin):
         if net_bytes is not None:
             ckpt = torch.load(io.BytesIO(net_bytes), weights_only=True)
             self._net = _FusionNet(
-                ckpt["n_tab"], ckpt["n_tfidf"], ckpt["n_ts"],
-                self.emb_dim, self.dropout,
+                ckpt["n_tab"],
+                ckpt["n_tfidf"],
+                ckpt["n_ts"],
+                self.emb_dim,
+                self.dropout,
             )
             self._net.load_state_dict(ckpt["state_dict"])
             self._net.eval()

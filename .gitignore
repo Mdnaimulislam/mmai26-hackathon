@@ -10,10 +10,6 @@ __pycache__/
 saved_models/*.joblib
 saved_models/*.pkl
 
-# Other strands (present in working tree but not part of this branch)
-automotive_strand/
-housing_strand/
-clinical_strand/
 
 # Root files from main branch
 LICENSE

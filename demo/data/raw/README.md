@@ -150,4 +150,4 @@ One row per patient who has a clinical note. 344 of the 500 patients have a note
 | `temp` | float | 35.0–39.1 | Temperature (°C) |
 | `lactate` | float | 0.30–6.36 | Blood lactate (mmol/L) |
 
-The hourly series is used by **Model C** to compute temporal features: late-vs-early slope, variability (SD), and direction-of-change for each vital sign. The aggregated 24h summaries in `tabular.csv` (`hr_mean`, `hr_std`, etc.) are derived from this same series.
+The hourly series is used by **Model A** to compute temporal features: late-vs-early slope, variability (SD), and direction-of-change for each vital sign. The aggregated 24h summaries in `tabular.csv` (`hr_mean`, `hr_std`, etc.) are derived from this same series.

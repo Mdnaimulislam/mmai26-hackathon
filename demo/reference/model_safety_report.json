@@ -1,5 +1,5 @@
 {
-  "schema_version": "omaib-clinical-v0.3",
+  "schema_version": "omaib-clinical-demo",
   "report_type": "model_safety_report",
   "strand": "clinical",
   "hackathon": "MultimodalAI26",
@@ -14,21 +14,11 @@
       "verdict": "",
       "conditions": "",
       "narrative": "",
-      "subgroup_gaps": {
-        "abdominal": 0.0,
-        "cardiac": 0.0,
-        "orthopaedic": 0.0,
-        "vascular": 0.0
-      },
       "metrics": {
         "auroc": 0.0,
         "auprc": 0.0,
         "brier_score": 0.0,
         "sensitivity": 0.0,
-        "specificity": 0.0,
-        "ppv": 0.0,
-        "npv": 0.0,
-        "f1": 0.0,
         "threshold": 0.35,
         "n_total": 0,
         "n_positive": 0
@@ -42,10 +32,5 @@
       }
     }
   ],
-  "option_specific": {
-    "type": "",
-    "title": "",
-    "content": {}
-  },
   "overall_notes": ""
 }

@@ -1,5 +1,8 @@
 # MultimodalAI'26 Hackathon — Clinical Strand Guide — OMAIB
 
+> **New to clinical AI? That's fine — that's the point.**
+> You're here to ask hard questions about an AI system, not to be an expert in one. You'll receive templates, a starter dataset, and support from problem holders throughout the day. Your job is the thinking. We handle the format.
+
 ## The Challenge: "Can You Trust an AI in the ICU?"
 
 ---
@@ -10,21 +13,23 @@ It is 3 a.m. on an intensive care unit. A nurse is managing eight patients simul
 
 An AI system reviews all 5,000 patients and flags the ones it predicts will deteriorate in the next 24 hours. The nurse sees the alert and acts. Or the AI misses the patient entirely, and the nurse doesn't know to look twice.
 
-**This is not hypothetical.** Early warning AI systems are being deployed in ICUs across the UK, US, and Europe right now. The question is not whether they will be used — it is whether the teams deploying them have genuinely evaluated whether they are safe.
+Early warning AI systems are being deployed in ICUs across the UK, US, and Europe right now. The question is not whether they will be used — it is whether the teams deploying them have genuinely evaluated whether they are safe.
 
 When these models fail, the costs are asymmetric:
 
-- A **false negative** (missed deterioration) means a patient who could have been saved is not treated in time. In an ICU, hours matter. Mortality rises sharply with delayed intervention.
-- A **false positive** (unnecessary alert) means nurses respond to phantom alarms, eroding trust in the system and eventually causing real alerts to be ignored.
-- A **subgroup failure** means a model that works well on average but fails on a specific patient group — those patients bear the risk silently, invisible in aggregate statistics.
+- **Missed deterioration (false negative)** — a patient who could have been saved is not treated in time. In an ICU, hours matter. Mortality rises sharply with delayed intervention.
+- **Unnecessary alert (false positive)** — nurses respond to phantom alarms, eroding trust in the system and eventually causing real alerts to be ignored.
+- **Silent subgroup failure** — a model that works well on average but fails on a specific patient group means those patients bear the risk silently, invisible in aggregate statistics.
 
-Your job today is to find those failures — and make that evidence visible, actionable, and honest.
+**Your job today is to find those failures — and make the evidence visible, actionable, and honest.**
 
 ---
 
 ## 2. Your Role in This Hackathon
 
-Each team builds a solution grounded in the clinical dataset and produces a structured set of evidence deliverables that a clinical governance board could act on. The problem is defined, the dataset is provided, and the output format is specified — but what you build on top, and how you communicate what you find, is entirely your team's.
+Each team builds a solution grounded in the clinical dataset and produces a set of evidence deliverables that a hospital safety committee could act on when deciding whether to deploy, restrict, or reject an AI system.
+
+The problem is defined. The dataset is provided. The output templates are given to you — **you fill them in based on what you find.** What you bring is the analysis, the judgement, and the communication.
 
 ### What You Build
 
@@ -93,23 +98,33 @@ A runnable tool with a clear intended user and a working demonstration of its co
 
 **Suggested challenge ideas (or define your own grounded in the dataset):**
 
-- **Clinical AI readiness decision support** — an AI-powered solution that helps a hospital decide whether an ICU AI model is ready for deployment, restricted use, further validation, or rejection.
-- **Bedside alarm explainability product** — a product with a user interface that surfaces plain-language reasoning behind every AI-generated ICU alarm, so clinicians can accept or override with one tap and the rationale is logged. The product must also measure whether AI alerts risk overwhelming clinicians or would meaningfully improve response times.
-- **Patient population drift monitor** — a lightweight monitoring service that continuously compares the incoming patient population against the model's training cohort and sends an early-warning signal when the ICU population diverges meaningfully.
+**Challenge 1 — Clinical AI Readiness Decision Support**
+Build an AI-powered tool that helps a hospital decide whether an ICU model is ready for deployment, restricted use, further validation, or rejection. The output should be a structured recommendation a governance committee could act on.
+
+**Challenge 2 — Bedside Alarm Explainability Product**
+Build a product with a user interface that surfaces plain-language reasoning behind every AI-generated ICU alarm. Clinicians should be able to accept or override each alert with one tap, and the rationale must be logged. The product must also measure whether AI alerts risk overwhelming clinicians (alert fatigue) or would meaningfully improve response times.
+
+**Challenge 3 — Patient Population Drift Monitor**
+Build a lightweight monitoring service that continuously compares the incoming patient population against the model's training cohort and sends an early-warning signal when the ICU population diverges meaningfully — for example, a seasonal influx of respiratory patients the model has rarely seen before.
+
+**Define Your Own**
+If your team identifies a compelling problem grounded in the dataset that does not fit the above options, you may define your own. Discuss it with a problem holder before committing.
 
 ### B. OMAIB Pathway Manifest (`omaib_pathway.json`)
 
-A structured JSON manifest containing per-model verdicts and metrics for all three ICU models. Must include: team name and members; evaluation date; per-model verdict (APPROVE / CONDITIONAL / NOT APPROVED), full metrics (AUROC, AUPRC, Brier score, sensitivity, specificity, PPV, NPV, F1, threshold, n_total, n_positive), and subgroup gaps; and overall team notes.
+A structured JSON manifest containing per-model verdicts and metrics for all models your team built. Think of it as a passport for each model: did it pass, fail, or need more work? Must include: team name and members; evaluation date; per-model verdict (APPROVE / CONDITIONAL / NOT APPROVED), full metrics (AUROC, AUPRC, Brier score, sensitivity, specificity, PPV, NPV, F1, threshold, n_total, n_positive), and subgroup gaps; and overall team notes.
 
-The schema is provided — your team fills in the verdict, conditions, narrative, and metric fields before export. A missing verdict or empty metrics block for any model causes the file to be rejected at submission.
+> **Don't worry about the format.** The schema is provided — your team fills in the verdict, conditions, narrative, and metric fields before export. A missing verdict or empty metrics block for any model causes the file to be rejected at submission.
 
 ### C. Model Safety Report (`model_safety_report.json`)
 
-A structured JSON report containing the full safety assessment for all three models. Must include: schema_version, report_type, strand, team, evaluation_date; a models array with per-model verdict, full metrics, conditions, narrative, subgroup_gaps, responses to all five clinical deployment questions, failure analysis characterisations, explainability output, and at least three failure catalogue entries; and overall_notes.
+A structured JSON report containing the full safety assessment for all models your team built. Must include: schema_version, report_type, strand, team, evaluation_date; a models array with per-model verdict, full metrics, conditions, narrative, subgroup_gaps, responses to all five clinical deployment questions, failure analysis characterisations, explainability output, and at least three failure catalogue entries; and overall_notes.
 
 JSON is required so the file can be validated against the hackathon's centralised reporting schema and ingested. Judges verify during the demo that no narrative field reads "Not provided".
 
 The five clinical deployment questions (`q1_miss_rate` through `q5_calibration`) and the four failure analysis characterisations have no prescribed answers — your team derives these from your own evaluation of the models. Use the field names in Section 12B as prompts for what each field should address.
+
+> **This is your team's core evidence document.** The template walks you through every section, and each field name is a prompt for what to investigate.
 
 ### D. Evidence Dashboard
 
@@ -227,7 +242,19 @@ git push origin your-team-name
 Then open a PR on GitHub: `your-team-name → clinical`
 Title: `"Team <your-team-name> — Clinical Strand Submission"`
 
-> **The PR must be open by 18:00 on 10 June.** Do not push directly to the `clinical` branch — all team work goes on your named team branch.
+> **Final submission deadline: before 09:30 on 11 June.** Do not push directly to the `clinical` branch — all team work goes on your named team branch.
+
+---
+
+## Stretch Goals *(if time permits)*
+
+These are optional extensions for teams that finish early or want to go deeper.
+
+- **Model iteration** — Build a second version of one of your models that directly addresses a finding from your Evidence Dashboard. For example: add a flag for patients without clinical notes, then re-evaluate whether that group is treated more fairly.
+- **Threshold sensitivity sweep** — Plot sensitivity and specificity for each model across thresholds 0.20–0.80. Identify the clinically appropriate threshold for each and justify it in terms a governance board would accept.
+- **Extended subgroup analysis** — Add SOFA score quartile and notes-availability as additional subgroup dimensions. Look for intersectional failure modes — for example, elderly patients who also have no clinical notes.
+- **Decision curve analysis** — Plot the net benefit of each model versus a treat-all and a treat-none baseline across a range of decision thresholds.
+- **Plain-language summary** — Write a one-page summary of your findings that a patient, family member, or non-technical NHS decision-maker could read and act on.
 
 ---
 
@@ -282,6 +309,19 @@ All findings — subgroup gaps, failure mode narratives, deployment conditions, 
 - All agree on which model to evaluate first and which subgroup to investigate as the primary failure-mode target.
 
 The implementation phase is done when all five Evidence Dashboard views are complete and both JSON files are exported. Only then does demo preparation begin.
+
+---
+
+## Support Available
+
+| Need | Who to ask |
+|---|---|
+| Understanding the dataset or clinical context | Problem holders (present throughout the day) |
+| Help with the JSON templates or validator | Technical support desk |
+| Scoping or redefining your challenge | Problem holders |
+| Interpreting a subgroup finding | Problem holders |
+
+> **You are not expected to know everything going in. Ask early, ask often.**
 
 ---
 
