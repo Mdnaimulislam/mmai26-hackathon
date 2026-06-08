@@ -6,13 +6,15 @@
 
 > **"Prove It — Building Evidence for Trustworthy Multimodal AI Deployment"**
 
+These strands are designed to foster creativity and make the hackathon genuinely enjoyable for every participant, whilst keeping sight of a serious objective: trustworthy multimodal AI deployment.
+
 ---
 
 ## The Challenge
 
 AI systems are being deployed in ICUs, social housing, and robotic platforms — but can the people who depend on them actually trust them? Trust has to be earned with evidence, not assumed.
 
-This is a **deployment-centric** hackathon. Each team produces two things: a solution they choose to build, and a structured set of strand-specific evidence deliverables. The dataset provided for each strand is the foundation for both. The best entries will not just measure performance — they will find the failures, name the risks, and make the case for what needs to change before deployment.
+Each team produces two things: a solution they choose to build, and a structured set of strand-specific evidence deliverables. The dataset provided for each strand is the foundation for both. The best entries will not just measure performance — they will find the failures, name the risks, and make the case for what needs to change before deployment.
 
 ---
 
@@ -29,14 +31,15 @@ It is 3 a.m. on an intensive care unit. A nurse is managing eight patients simul
 
 An AI system reviews all 5,000 patients and flags the ones it predicts will deteriorate in the next 24 hours. The nurse sees the alert and acts. Or the AI misses the patient entirely, and the nurse doesn't know to look twice.
 
-Each team builds a solution grounded in the clinical dataset and produces a structured set of evidence deliverables that a clinical governance board could act on. The problem is defined, the dataset is provided, and the output format is specified — but what you build on top, and how you communicate what you find, is entirely your team's.
+Each team builds a solution grounded in the clinical dataset and produces a set of evidence deliverables that a hospital safety committee could act on. The problem is defined. The dataset is provided. The output templates are given to you — **you fill them in based on what you find.** What you bring is the analysis, the judgement, and the communication.
 
-**Suggested challenge ideas (or define your own grounded in the dataset):**
+**Challenge ideas (or define your own grounded in the dataset):**
 
-- **Clinical AI readiness decision support** — an AI-powered solution that helps a hospital decide whether an ICU AI model is ready for deployment, restricted use, further validation, or rejection.
-- **Bedside alarm explainability product** — a product with a user interface that surfaces plain-language reasoning behind every AI-generated ICU alarm, so clinicians can accept or override with one tap and the rationale is logged. The product must also measure whether AI alerts risk overwhelming clinicians or would meaningfully improve response times.
-- **Patient population drift monitor** — a lightweight monitoring service that continuously compares the incoming patient population against the model's training cohort and sends an early-warning signal when the ICU population diverges meaningfully.
+- **Clinical AI Readiness Decision Support** — an AI-powered tool that helps a hospital decide whether an ICU model is ready for deployment, restricted use, further validation, or rejection.
+- **Bedside Alarm Explainability Product** — a product that surfaces plain-language reasoning behind every AI-generated ICU alarm, so clinicians can accept or override with one tap and the rationale is logged. The product must also measure whether AI alerts risk overwhelming clinicians or would meaningfully improve response times.
+- **Patient Population Drift Monitor** — a lightweight monitoring service that sends an early-warning signal when the ICU patient population diverges meaningfully from the model's training cohort.
 
+> **Not sure which to pick?** You can also define your own compelling problem grounded in the dataset. Discuss it with a problem holder before committing.
 
 ### What You Build
 **Core mandatory deliverables (all options):**
@@ -63,13 +66,15 @@ The data looks comprehensive. But a data manager notices something: for 40 of th
 
 Before anyone uses this dataset to decide which households receive a boiler upgrade, someone must answer a hard question: is this data safe to use?
 
-Each team builds a solution grounded in the housing dataset and produces a structured set of evidence deliverables that a council, housing association, or social-impact organisation could act on. The problem is defined, the dataset is provided, and the output format is specified — but what you build on top, and how you communicate what you find, is entirely your team's.
+Each team builds a solution grounded in the housing dataset and produces a set of evidence deliverables that a council, housing association, or social-impact organisation could act on. The problem is defined. The dataset is provided. The output templates are given to you — **you fill them in based on what you find.** What you bring is the analysis, the judgement, and the communication.
 
-**Suggested challenge ideas (or define your own grounded in the dataset):**
+**Challenge ideas (or define your own grounded in the dataset):**
 
 - **Cold home intelligence service** — an AI-powered service that ranks properties by cold-risk score for a housing provider's asset management team.
 - **Sensor network health and MNAR audit** — an estate-wide sensor health monitor that tracks CO₂ dropout rates per property over time and detects continuous data gaps beyond a configurable threshold, designed for use by a housing data manager.
 - **Heating failure prediction and fairness audit** — an AI-powered predictive tool that combines sensor time-series data with property metadata to identify households at imminent risk of heating system failure, with an explainability layer and a fairness check that flags whether high-risk scores are disproportionately concentrated among particular property types.
+
+> **Not sure which to pick?** You can also define your own compelling problem grounded in the dataset. Discuss it with a problem holder before committing.
 
 ### What You Build
 **Core mandatory deliverables (all options):**
@@ -119,26 +124,26 @@ Refer to the Robotic strand guide for more information.
 
 | Start | End | Session |
 |---|---|---|
-| **09:30** | 10:00 | Arrival, registration, refreshments, and networking |
-| **10:00** | 10:20 | Welcome and scene-setting — why this hackathon, what OMAIB is, what the strands need |
-| **10:20** | 10:30 | Team formation and strand selection — participants select a strand and find their table |
-| **10:30** | 11:00 | **Hackathon begins (Phase 1)** — Q&A and starter kit walkthrough |
-| **11:00** | 13:00 | Phase 2: Build — teams split by track roles |
-| **13:00** | 14:00 | Lunch break |
-| **14:00** | 16:00 | Phase 2 / Phase 3: building continues and teams converge on the final report |
-| **16:00** | 16:30 | Tea and coffee break |
-| **16:30** | 18:00 | Final push — packaging, submission forms, demo prep |
-| **18:00+** |  | Submission — open your PR against your strand branch |
+| **09:30** | 10:00 | Arrival, registration, and networking |
+| **10:00** | 11:00 | Introduction and team formation |
+| **11:00** | 12:45 | **Hackathon begins — Phase 1: Building** |
+| **12:45** | 14:00 | Team Sharing 1 and lunch break |
+| **14:00** | 15:30 | Phase 1 continues — Building |
+| **15:30** | 15:45 | Tea and coffee break |
+| **15:45** | 17:30 | Phase 2: Evaluation and Reporting — Minimal Viable Submission by 17:00 |
+| **17:30** | 18:00 | Team Sharing 2 |
 
 ---
 
 | Date | Event |
 |---|---|
-| **11 June** — MultimodalAI Workshop Day 1 | Winner announcement  & Prize awarded |
+| **11 June** — MultimodalAI Workshop Day 1 | Final submission (before 09:30) · Demo session & prize presentation |
 
 ---
 
 ## Quick Start
+
+> **New to this kind of hackathon?** Each strand provides a demo, ready-to-use templates, and problem holders available throughout the day. You do not need to be a domain expert to contribute.
 
 Each strand is on its own branch. Clone only the branch for your strand — you do not need the others.
 
@@ -160,13 +165,15 @@ git checkout -b your-team-name
 
 All your work goes on your team branch. **Do not commit directly to the strand branch.**
 
-Read `STRAND_GUIDE.md` first — it explains the task, the data, your track role, and the deliverables you must complete before your demo on the 11 June workshop day.
+Read `STRAND_GUIDE.md` — it explains the task, the data, your track role, and the deliverables you must complete before the demo on 11 June. If you are short on time, start with the **Your First 30 Minutes** section.
 
 ---
 
 ## How to Submit
 
 Submission is via a **Pull Request** from your team branch to your strand branch on GitHub. This is the official submission record — judges review your PR.
+
+> **First time using Git?** The technical support desk can help you push and open a PR. Ask early — don't leave it to the last 30 minutes.
 
 ```bash
 # Step 1 — Commit your final work
@@ -182,11 +189,9 @@ git push origin your-team-name
 # Title: "Team <your-team-name> — <Strand> Strand Submission"
 ```
 
-**Your PR must include all mandatory core deliverables for your strand, plus your option-specific output.**
+**Your PR must include all mandatory core deliverables for your strand, plus your option-specific output.** Refer to the *What You Build* section for your strand above, and the Strand Guide for full detail.
 
-Refer to 'what must be built' section above and the strand guide to understand what must be included in your submission.
-
-**Submission window: 18:00–23:59 on 10 June.** Push your code to your GitHub team branch and open the PR during this window.
+**Final submission deadline: before 09:30 on 11 June.** Push your code to your GitHub team branch and open the PR before the demo session begins.
 
 ---
 
@@ -283,7 +288,16 @@ For more information, visit: [UK Open Multimodal AI Network | MultimodalAI'26 Ha
 
 ---
 
-## Questions
+## Questions and Support
+
+| Need | Who to ask |
+|---|---|
+| Clinical, housing, or robotics domain questions | Problem holders (present throughout the day) |
+| JSON templates, validators, or pre-commit hooks | Technical support desk |
+| Scoping or redefining your challenge | Problem holders |
+| Git, GitHub, or submission process | Technical support desk |
+
+> **You are not expected to know everything going in. Ask early, ask often.**
 
 **Email: multimodalai26-group@sheffield.ac.uk**
 
