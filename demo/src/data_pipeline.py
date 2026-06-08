@@ -17,7 +17,9 @@ def load_and_merge(raw_dir: Path) -> pd.DataFrame:
     energy = pd.read_csv(raw_dir / "energy_noise_daily.csv")
     survey = pd.read_csv(raw_dir / "resident_feedback_daily.csv")
 
-    merged = env.merge(energy, on=KEY_COLS, how="left").merge(survey, on=KEY_COLS, how="left")
+    merged = env.merge(energy, on=KEY_COLS, how="left").merge(
+        survey, on=KEY_COLS, how="left"
+    )
     merged = merged.merge(properties, on="reference", how="left")
 
     merged["date"] = pd.to_datetime(merged[["year", "month", "day"]], errors="coerce")
@@ -48,7 +50,9 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
 
 def split_by_property(df: pd.DataFrame, test_size: float = 0.25, seed: int = 42):
     refs = df["reference"].drop_duplicates()
-    train_refs, test_refs = train_test_split(refs, test_size=test_size, random_state=seed)
+    train_refs, test_refs = train_test_split(
+        refs, test_size=test_size, random_state=seed
+    )
 
     train_df = df[df["reference"].isin(train_refs)].copy()
     test_df = df[df["reference"].isin(test_refs)].copy()

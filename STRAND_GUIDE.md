@@ -227,7 +227,7 @@ git push origin your-team-name
 Then open a PR on GitHub: `your-team-name → housing`
 Title: `"Team <your-team-name> — Housing Strand Submission"`
 
-> **The PR must be open by 18:00 on 10 June.** Do not push directly to the `housing` branch — all team work goes on your named team branch.
+> **Final submission deadline: before 09:30 on 11 June.** Do not push directly to the `housing` branch — all team work goes on your named team branch.
 
 ---
 

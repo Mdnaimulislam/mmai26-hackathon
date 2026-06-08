@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.venv/
+saved_models/*.joblib
+data/processed/*.csv

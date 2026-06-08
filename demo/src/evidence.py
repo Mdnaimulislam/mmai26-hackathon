@@ -42,7 +42,9 @@ def compute_sensor_quality_view(df: pd.DataFrame) -> dict:
 
 
 def compute_mnar_view(df: pd.DataFrame) -> dict:
-    co2_dropout_by_property = df.groupby("reference")["avgCo2"].apply(lambda s: s.isna().mean())
+    co2_dropout_by_property = df.groupby("reference")["avgCo2"].apply(
+        lambda s: s.isna().mean()
+    )
     top_dropout = co2_dropout_by_property.sort_values(ascending=False).head(5)
 
     property_type_dropout = (
@@ -67,8 +69,12 @@ def compute_mnar_view(df: pd.DataFrame) -> dict:
             "name": "survey_nonresponse_by_risk_state",
             "mechanism": "Survey missingness differs between cold-risk and non-cold-risk days.",
             "evidence": {
-                "cold_risk_0_missing_rate": float(cold_vs_warm_survey_missing.get(0, np.nan)),
-                "cold_risk_1_missing_rate": float(cold_vs_warm_survey_missing.get(1, np.nan)),
+                "cold_risk_0_missing_rate": float(
+                    cold_vs_warm_survey_missing.get(0, np.nan)
+                ),
+                "cold_risk_1_missing_rate": float(
+                    cold_vs_warm_survey_missing.get(1, np.nan)
+                ),
             },
         },
     ]
@@ -77,7 +83,9 @@ def compute_mnar_view(df: pd.DataFrame) -> dict:
         "verdict": "CONDITIONAL",
         "patterns": patterns,
         "co2_dropout_by_property_top5": {k: float(v) for k, v in top_dropout.items()},
-        "co2_dropout_by_property_type": {k: float(v) for k, v in property_type_dropout.items()},
+        "co2_dropout_by_property_type": {
+            k: float(v) for k, v in property_type_dropout.items()
+        },
     }
 
 

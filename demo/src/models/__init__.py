@@ -1,1 +1,0 @@
-"""Demo model definitions."""

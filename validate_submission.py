@@ -110,7 +110,9 @@ def validate_pathway(path):
         err("team.members is empty -- list all team member names")
     branch = get_current_branch()
     if branch and team.get("name", "") != branch:
-        err(f"team.name '{team.get('name', '')}' must match current git branch '{branch}'")
+        err(
+            f"team.name '{team.get('name', '')}' must match current git branch '{branch}'"
+        )
 
     models = data.get("models", [])
     if len(models) < 3:
@@ -124,7 +126,9 @@ def validate_pathway(path):
 
         verdict = m.get("verdict", "")
         if verdict not in VALID_VERDICTS:
-            err(f"{label}.verdict '{verdict}' must be one of: {', '.join(sorted(VALID_VERDICTS))}")
+            err(
+                f"{label}.verdict '{verdict}' must be one of: {', '.join(sorted(VALID_VERDICTS))}"
+            )
         if verdict in ("CONDITIONAL", "NOT READY"):
             check_string(m, "conditions", label)
 
@@ -134,7 +138,9 @@ def validate_pathway(path):
         if metrics.get("auroc", 0.0) == 0.0:
             err(f"{label}.metrics.auroc is 0 -- populate real metric values")
         if metrics.get("n_properties", 0) == 0:
-            err(f"{label}.metrics.n_properties is 0 -- fill in the test set property count")
+            err(
+                f"{label}.metrics.n_properties is 0 -- fill in the test set property count"
+            )
 
     overall = data.get("overall_verdict", "")
     if overall not in VALID_VERDICTS:
@@ -166,7 +172,9 @@ def validate_benchmark_card(path):
         err("team.members is empty")
     branch = get_current_branch()
     if branch and team.get("name", "") != branch:
-        err(f"team.name '{team.get('name', '')}' must match current git branch '{branch}'")
+        err(
+            f"team.name '{team.get('name', '')}' must match current git branch '{branch}'"
+        )
 
     models = data.get("models", [])
     if len(models) < 3:
@@ -180,7 +188,9 @@ def validate_benchmark_card(path):
 
         verdict = m.get("verdict", "")
         if verdict not in VALID_VERDICTS:
-            err(f"{label}.verdict '{verdict}' must be one of: {', '.join(sorted(VALID_VERDICTS))}")
+            err(
+                f"{label}.verdict '{verdict}' must be one of: {', '.join(sorted(VALID_VERDICTS))}"
+            )
         check_string(m, "narrative", label)
 
         metrics = m.get("metrics", {})
