@@ -236,26 +236,14 @@ AI coding assistants are allowed and encouraged. You must disclose what you used
 
 ## Judging Criteria
 
-The clinical and housing strands are judged on the same criteria. The robotics strand is judged on different criteria — see the Strand Guide on the `robotic` branch.
-
-**Clinical and housing strands:**
+All strands are judged on the same four criteria.
 
 | Criterion | Weight | What it means |
 |---|---|---|
 | **Creativity** | 15% | Original approach with a clear point of view; the solution and evidence framing say something distinctive about the team's perspective and the problem |
 | **Evidence quality** | 35% | Are your findings specific and backed by evidence drawn from the data? Did you surface concrete problems or trust gaps — not just describe their possibility? |
-| **Clarity** | 25% | Could a non-technical practitioner — a clinician or housing officer — understand and act on your output? |
+| **Clarity** | 25% | Could a non-technical practitioner — a clinician, housing officer, or lab collaborator — understand and act on your output? |
 | **Deployability** | 25% | How close is your deliverable to something the domain team could actually publish, adopt, or act on? |
-
-**Robotics strand:**
-
-| Criterion | Weight | What it means |
-|---|---|---|
-| **Sub-portal creativity and clarity** | 25% | A clear, engaging portal that represents a lab or institution well — purposeful, not a generic template |
-| **SONAIR federation readiness** | 15% | A working deployed portal, valid `federation.json`, and basic compatibility with the SONAIR federation concept |
-| **Data analysis and plots** | 25% | Meaningful plots from the UR robot teleoperation dataset, with sensible handling of timestamps, latency, delay, or synchronisation |
-| **Proposed metric** | 15% | A clear and defensible metric that could help describe latency, synchronisation, or sim-to-real behaviour |
-| **Final presentation and GenAI use** | 20% | Clear explanation of the portal, data findings, metric, design choices, and limitations |
 
 Judges will ask questions during the demo session. Your team needs to understand what you built and why you made the decisions you made.
 
