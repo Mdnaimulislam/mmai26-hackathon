@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
 validate_submission.py -- Pre-commit validator for housing strand submission files.
-
+Advisory validator: flags missing or placeholder content as warnings so participants
+can spot gaps before submission, but only fails (exit 1) on genuine file-format
+problems that would break parsing or judging tooling (invalid JSON, missing files,
+wrong schema_version / submission_type / report_type / strand / hackathon).
 Validates:
   reference/omaib_pathway.json         -- schema, verdicts, non-zero metrics, overall_verdict
   reference/housing_benchmark_card.json -- schema, deployment questions, component verdicts
-
-Exit 0 on success, exit 1 on any error (triggers pre-commit failure).
+Exit 0 when structurally valid (warnings allowed); exit 1 only on format/schema errors.
 """
 
 import json
@@ -63,9 +65,9 @@ def check_string(obj, key, label, required=True):
     val = obj.get(key, "")
     if not isinstance(val, str) or is_placeholder(val):
         if required:
-            err(f"{label}.{key} is empty or a placeholder")
+            warn(f"{label}.{key} is empty or a placeholder")
         else:
-            warn(f"{label}.{key} is empty (recommended to fill)")
+            warn(f"{label}.{key} is empty — recommended to fill")
 
 
 def get_current_branch():
@@ -105,18 +107,16 @@ def validate_pathway(path):
 
     team = data.get("team", {})
     if is_placeholder(team.get("name", "")):
-        err("team.name is empty -- fill in your team name before committing")
+        warn("team.name is empty — fill in your team name before committing")
     if is_placeholder(team.get("members", "")):
-        err("team.members is empty -- list all team member names")
+        warn("team.members is empty — list all team member names")
     branch = get_current_branch()
     if branch and team.get("name", "") != branch:
-        err(
-            f"team.name '{team.get('name', '')}' must match current git branch '{branch}'"
-        )
+        warn(f"team.name '{team.get('name', '')}' must match current git branch '{branch}'")
 
     models = data.get("models", [])
     if len(models) < 3:
-        err(
+        warn(
             f"models array has {len(models)} entr{'y' if len(models) == 1 else 'ies'}; "
             f"at least 3 required"
         )
@@ -126,7 +126,7 @@ def validate_pathway(path):
 
         verdict = m.get("verdict", "")
         if verdict not in VALID_VERDICTS:
-            err(
+            warn(
                 f"{label}.verdict '{verdict}' must be one of: {', '.join(sorted(VALID_VERDICTS))}"
             )
         if verdict in ("CONDITIONAL", "NOT READY"):
@@ -136,15 +136,13 @@ def validate_pathway(path):
 
         metrics = m.get("metrics", {})
         if metrics.get("auroc", 0.0) == 0.0:
-            err(f"{label}.metrics.auroc is 0 -- populate real metric values")
+            warn(f"{label}.metrics.auroc is 0 — populate real metric values")
         if metrics.get("n_properties", 0) == 0:
-            err(
-                f"{label}.metrics.n_properties is 0 -- fill in the test set property count"
-            )
+            warn(f"{label}.metrics.n_properties is 0 — fill in the test set property count")
 
     overall = data.get("overall_verdict", "")
     if overall not in VALID_VERDICTS:
-        err(
+        warn(
             f"overall_verdict '{overall}' must be one of: {', '.join(sorted(VALID_VERDICTS))}"
         )
 
@@ -167,18 +165,16 @@ def validate_benchmark_card(path):
 
     team = data.get("team", {})
     if is_placeholder(team.get("name", "")):
-        err("team.name is empty")
+        warn("team.name is empty")
     if is_placeholder(team.get("members", "")):
-        err("team.members is empty")
+        warn("team.members is empty")
     branch = get_current_branch()
     if branch and team.get("name", "") != branch:
-        err(
-            f"team.name '{team.get('name', '')}' must match current git branch '{branch}'"
-        )
+        warn(f"team.name '{team.get('name', '')}' must match current git branch '{branch}'")
 
     models = data.get("models", [])
     if len(models) < 3:
-        err(
+        warn(
             f"models array has {len(models)} entr{'y' if len(models) == 1 else 'ies'}; "
             f"at least 3 required"
         )
@@ -188,29 +184,29 @@ def validate_benchmark_card(path):
 
         verdict = m.get("verdict", "")
         if verdict not in VALID_VERDICTS:
-            err(
+            warn(
                 f"{label}.verdict '{verdict}' must be one of: {', '.join(sorted(VALID_VERDICTS))}"
             )
         check_string(m, "narrative", label)
 
         metrics = m.get("metrics", {})
         if metrics.get("auroc", 0.0) == 0.0:
-            err(f"{label}.metrics.auroc is 0")
+            warn(f"{label}.metrics.auroc is 0")
         if metrics.get("n_properties", 0) == 0:
-            err(f"{label}.metrics.n_properties is 0")
+            warn(f"{label}.metrics.n_properties is 0")
 
         # Deployment questions -- all eight required
         dq = m.get("deployment_questions", {})
         for q in ("q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8"):
             if is_placeholder(dq.get(q, "")):
-                err(f"{label}.deployment_questions.{q} is empty")
+                warn(f"{label}.deployment_questions.{q} is empty")
 
     # Component verdicts -- all three required
     cv = data.get("component_verdicts", {})
     for component in ("data_quality", "split_integrity", "equity"):
         verdict = cv.get(component, "")
         if verdict not in VALID_VERDICTS:
-            err(
+            warn(
                 f"component_verdicts.{component} '{verdict}' must be one of: "
                 f"{', '.join(sorted(VALID_VERDICTS))}"
             )
@@ -218,7 +214,7 @@ def validate_benchmark_card(path):
     # Overall verdict
     overall = data.get("overall_verdict", "")
     if overall not in VALID_VERDICTS:
-        err(
+        warn(
             f"overall_verdict '{overall}' must be one of: {', '.join(sorted(VALID_VERDICTS))}"
         )
 
@@ -226,21 +222,23 @@ def validate_benchmark_card(path):
     opt = data.get("option_specific", {})
     opt_type = opt.get("type", "")
     if opt_type not in VALID_OPTION_TYPES:
-        err(
-            f"option_specific.type '{opt_type}' is not a recognised type "
-            f"({', '.join(sorted(VALID_OPTION_TYPES))})"
+        recognised = ", ".join(sorted(VALID_OPTION_TYPES))
+        warn(
+            f"option_specific.type '{opt_type}' is not one of the three "
+            f"recognised types ({recognised}) — if your team chose a custom challenge "
+            f"idea, this is expected; otherwise check the spelling."
         )
     if is_placeholder(opt.get("title", "")):
-        err("option_specific.title is empty")
+        warn("option_specific.title is empty")
     content = opt.get("content")
     if not isinstance(content, dict) or not content:
-        err("option_specific.content is empty")
+        warn("option_specific.content is empty")
         return
 
     required_keys = OPTION_REQUIRED_KEYS.get(opt_type, set())
     missing_keys = sorted([k for k in required_keys if k not in content])
     for key in missing_keys:
-        err(f"option_specific.content.{key} is required for type '{opt_type}'")
+        warn(f"option_specific.content.{key} is required for type '{opt_type}'")
 
 
 def main():
@@ -269,9 +267,14 @@ def main():
             print(e)
         print(f"\n[FAIL] {len(ERRORS)} error(s) found. Fix before committing.\n")
         sys.exit(1)
-    else:
-        print("[PASS] All submission files validated successfully.\n")
+    if WARNINGS:
+        print(
+            f"\n[PASS WITH WARNINGS] {len(WARNINGS)} issue(s) above — review before "
+            f"submission, but the file is structurally valid and will not block your commit.\n"
+        )
         sys.exit(0)
+    print("[PASS] All submission files validated successfully.\n")
+    sys.exit(0)
 
 
 if __name__ == "__main__":
