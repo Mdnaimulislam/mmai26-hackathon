@@ -2,6 +2,8 @@
 
 ## The Challenge: "Can Your Robotics Evidence Be Trusted Beyond the Lab?"
 
+> New to robotics, web development, or federation systems? That's fine — that's the point. You will receive a real dataset, a working main portal to plug into, and support from problem holders throughout the day.
+
 ---
 
 ## 1. The Scenario
@@ -12,13 +14,17 @@ In this hackathon, your team will create a creative campus sub-portal for your u
 
 The challenge is not only to build a sub-portal. You will also be given a non-sensitive dataset from the UCL–Nottingham UR robot teleoperation work. UCL remotely operates the system, while the physical UR robot is located at Nottingham. Your task is to use this data to create plots, explore timing or latency issues, and propose a metric that could help describe and quantify the simulation-to-real gap.
 
+> **Sim2real gap** is a core challenge in robotics: models trained in simulation often behave differently when deployed on physical hardware. Quantifying that gap is what SONAIR is designed to support. Problem holders can explain this further if helpful.
+
 You are allowed to use generative AI throughout the hackathon. However, you must be able to explain how you used it, why you made certain design or analysis choices, and what decisions were made by your team rather than simply copied from an AI tool.
 
 ---
 
-## 2. Your Role In This Hackathon
+## 2. Your Role
 
 Each team builds one Campus Sub-Portal and federates it with the SONAIR main portal. The main portal (the 3D UK map, the Co-Creation Space, the application server) is provided. You do not modify it. Your job is to build the content layer: a publicly accessible website that represents your lab, a `reference/federation.json` that connects it to the national system, and an evidence dashboard built from the SONAIR dataset.
+
+The problem is defined. The infrastructure is provided. The output format is specified — **you fill it in based on what you build and what you find in the data.**
 
 ### What You Build
 
@@ -26,7 +32,9 @@ Each team builds one Campus Sub-Portal and federates it with the SONAIR main por
 A public website that represents your institution, lab identity, robotics capability, datasets, equipment, and collaboration interests.
 
 **A SONAIR federation manifest**
-Fill in `reference/federation.json` with your lab's real details. This file allows your sub-portal to be discovered by the SONAIR main portal.
+Fill in `reference/federation.json` with your lab's real details. Think of this as your lab's entry in a national directory — the main portal reads this file to place your institution on the map and link to your sub-portal.
+
+> **Don't worry about the format.** The template is provided with every field explained. Run `python validate_submission.py` and it will tell you exactly what's missing.
 
 **A robotics evidence dashboard**
 A page or section that uses the Nottingham/UCL UR robot teleoperation dataset to produce useful plots and interpretation.
@@ -34,7 +42,7 @@ A page or section that uses the Nottingham/UCL UR robot teleoperation dataset to
 **A short final presentation**
 A clear explanation of what you built, what the data showed, what metric you proposed, and how you used generative AI.
 
-The aim is not to create the most complex website. The aim is to create a clear, creative, useful demonstration of how robotics evidence could be published through a federated SONAIR node.
+The aim is not to create the most complex website. The aim is to create a clear, creative, useful demonstration of how robotics evidence could be published through a federated SONAIR node. Substance over polish.
 
 ### What You Do Not Build
 
@@ -169,6 +177,8 @@ The submission is a 2.5-minute live demo covering the federation layer and the e
 
 All five items must pass before the demo session begins. Connector owns items 2–4; Builder owns item 1; Data Engineer owns item 5.
 
+> **Don't leave validation to the last 30 minutes.** Run `python validate_submission.py` early and often — it catches most issues instantly.
+
 - [ ] Sub-portal is live and publicly accessible (no login required)
 - [ ] `reference/federation.json` is filled in and passes `python validate_submission.py`
 - [ ] `reference/theme.config.json` updates the portal colour when `primary_color` is changed
@@ -188,11 +198,27 @@ Cover all six points:
 
 The strongest presentations will not simply show that something works. They will explain why the team made specific choices and how their portal could help publish trustworthy robotics evidence.
 
-### Stretch Goals (if time permits)
+### Stretch Goals *(if time permits)*
 
-- Annotate the RTT plot with GRANT/RELEASE/ESTOP events from `session_audit.csv`
-- JSON schema validator or GitHub Action for `reference/federation.json`
-- Accessibility improvements: semantic headings, alt text, strong colour contrast
+These are optional extensions for teams that finish early or want to go deeper.
+
+- **Event annotation** — Annotate the RTT plot with GRANT/RELEASE/ESTOP events from `session_audit.csv`
+- **JSON schema validator** — Build a GitHub Action that checks `federation.json` against the required schema on every commit
+- **Accessibility improvements** — Semantic headings, alt text, strong colour contrast
+
+---
+
+## Support Available
+
+| Need | Who to ask |
+|---|---|
+| Understanding the dataset or teleoperation context | Problem holders (present throughout the day) |
+| Sim2real gap, RTT, or latency concepts | Problem holders |
+| `federation.json` schema or validation | Technical support desk |
+| Iframe embedding or HTTPS deployment | Technical support desk |
+| Scoping or redefining your challenge | Problem holders |
+
+> **You are not expected to know everything going in. Ask early, ask often.**
 
 ---
 

@@ -127,7 +127,9 @@ def validate_federation(path: Path) -> dict | None:
         if node_id != node_id.lower():
             err(f"federation.json: node.id '{node_id}' must be lowercase")
         if " " in node_id:
-            err(f"federation.json: node.id '{node_id}' must not contain spaces — use hyphens")
+            err(
+                f"federation.json: node.id '{node_id}' must not contain spaces — use hyphens"
+            )
         branch = get_current_branch()
         if branch and node_id != branch:
             err(
@@ -316,8 +318,10 @@ def cross_validate(fed_data: dict | None, theme_data: dict | None) -> None:
     theme_color = theme_data.get("primary_color", "")
 
     if (
-        fed_name and theme_name
-        and not is_placeholder(fed_name) and not is_placeholder(theme_name)
+        fed_name
+        and theme_name
+        and not is_placeholder(fed_name)
+        and not is_placeholder(theme_name)
         and fed_name != theme_name
     ):
         warn(
@@ -326,8 +330,10 @@ def cross_validate(fed_data: dict | None, theme_data: dict | None) -> None:
         )
 
     if (
-        fed_city and theme_city
-        and not is_placeholder(fed_city) and not is_placeholder(theme_city)
+        fed_city
+        and theme_city
+        and not is_placeholder(fed_city)
+        and not is_placeholder(theme_city)
         and fed_city != theme_city
     ):
         warn(
@@ -336,8 +342,10 @@ def cross_validate(fed_data: dict | None, theme_data: dict | None) -> None:
         )
 
     if (
-        fed_color and theme_color
-        and not is_placeholder(fed_color) and not is_placeholder(theme_color)
+        fed_color
+        and theme_color
+        and not is_placeholder(fed_color)
+        and not is_placeholder(theme_color)
         and fed_color.upper() != theme_color.upper()
     ):
         warn(
@@ -380,7 +388,9 @@ def main() -> None:
         print(f"\n[FAIL] {len(ERRORS)} error(s) found. Fix before your demo.\n")
         sys.exit(1)
     else:
-        print("[PASS] reference/federation.json and reference/theme.config.json validated successfully.")
+        print(
+            "[PASS] reference/federation.json and reference/theme.config.json validated successfully."
+        )
         if WARNINGS:
             print(f"       {len(WARNINGS)} warning(s) above — review before the demo.")
         print()
