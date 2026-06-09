@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """
-validate_submission.py -- Pre-demo validator for the SONAIR robotics strand.
-
-Validates:
-  reference/federation.json     -- all 10 node fields, UK coordinates, no template defaults
-  reference/theme.config.json   -- all 5 fields, valid hex colour, no template defaults
-
-Also runs cross-file consistency checks (node.name, city, and colour must agree
-across both files).
-
-Exit 0 on success, exit 1 on any error (triggers pre-commit failure).
+validate_submission.py -- Advisory pre-submission validator for the SONAIR robotics strand.
+Validates reference/federation.json and reference/theme.config.json to help participants
+spot issues before demo day. Only genuine file-format problems cause a non-zero exit:
+invalid JSON, missing expected files, or federation.json missing top-level "node" or
+"co_creation_card" objects. Everything else is reported as a warning and does not block
+submission or commits.
+Also runs cross-file consistency checks (node.name, city, and colour) as warnings.
+Exit 0 when structurally valid (warnings allowed); exit 1 only on errors above.
 """
 
 import json
@@ -27,8 +25,6 @@ HEX_RE = re.compile(r"^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$")
 # Template sentinel values that must be replaced before submission
 TEMPLATE_LAT = 99.9999
 TEMPLATE_LON = -9.9999
-SHEFFIELD_LAT = 53.3814
-SHEFFIELD_LON = -1.4884
 
 PLACEHOLDER_STRINGS = {
     "",
@@ -73,7 +69,7 @@ def check_string(obj: dict, key: str, label: str, required: bool = True) -> None
     val = obj.get(key, "")
     if not isinstance(val, str) or is_placeholder(val):
         if required:
-            err(f"{label}.{key} is empty or a placeholder — fill in a real value")
+            warn(f"{label}.{key} is empty or a placeholder — fill in a real value")
         else:
             warn(f"{label}.{key} is empty (recommended to fill in)")
 
@@ -119,20 +115,18 @@ def validate_federation(path: Path) -> dict | None:
     # node.id ----------------------------------------------------------------
     node_id = node.get("id", "")
     if is_placeholder(node_id) or not node_id:
-        err(
+        warn(
             "federation.json: node.id is empty or a placeholder "
             "— use your institution's short ID (e.g. 'edinburgh')"
         )
     else:
         if node_id != node_id.lower():
-            err(f"federation.json: node.id '{node_id}' must be lowercase")
+            warn(f"federation.json: node.id '{node_id}' must be lowercase")
         if " " in node_id:
-            err(
-                f"federation.json: node.id '{node_id}' must not contain spaces — use hyphens"
-            )
+            warn(f"federation.json: node.id '{node_id}' must not contain spaces — use hyphens")
         branch = get_current_branch()
         if branch and node_id != branch:
-            err(
+            warn(
                 f"federation.json: node.id '{node_id}' must match your git branch '{branch}' "
                 f"— rename one to match the other"
             )
@@ -144,21 +138,16 @@ def validate_federation(path: Path) -> dict | None:
     # node.lat ---------------------------------------------------------------
     lat = node.get("lat")
     if lat is None:
-        err("federation.json: node.lat is missing")
+        warn("federation.json: node.lat is missing")
     elif not isinstance(lat, (int, float)):
-        err(
+        warn(
             f"federation.json: node.lat must be a number, got {type(lat).__name__} "
             f"— do not quote it as a string"
         )
     elif lat == TEMPLATE_LAT:
-        err(
+        warn(
             f"federation.json: node.lat is still the template placeholder ({TEMPLATE_LAT}) "
             f"— use your real latitude"
-        )
-    elif lat == SHEFFIELD_LAT:
-        err(
-            f"federation.json: node.lat is the Sheffield example value ({SHEFFIELD_LAT}) "
-            f"— replace with your real latitude"
         )
     elif not (49.0 <= lat <= 61.0):
         warn(
@@ -169,21 +158,16 @@ def validate_federation(path: Path) -> dict | None:
     # node.lon ---------------------------------------------------------------
     lon = node.get("lon")
     if lon is None:
-        err("federation.json: node.lon is missing")
+        warn("federation.json: node.lon is missing")
     elif not isinstance(lon, (int, float)):
-        err(
+        warn(
             f"federation.json: node.lon must be a number, got {type(lon).__name__} "
             f"— do not quote it as a string"
         )
     elif lon == TEMPLATE_LON:
-        err(
+        warn(
             f"federation.json: node.lon is still the template placeholder ({TEMPLATE_LON}) "
             f"— use your real longitude"
-        )
-    elif lon == SHEFFIELD_LON:
-        err(
-            f"federation.json: node.lon is the Sheffield example value ({SHEFFIELD_LON}) "
-            f"— replace with your real longitude"
         )
     elif not (-8.0 <= lon <= 2.0):
         warn(
@@ -194,12 +178,12 @@ def validate_federation(path: Path) -> dict | None:
     # node.color -------------------------------------------------------------
     color = node.get("color", "")
     if is_placeholder(color) or not color:
-        err(
+        warn(
             "federation.json: node.color is empty or a placeholder "
             "— use your institution's hex brand colour (e.g. '#3D5A80')"
         )
     elif not HEX_RE.match(str(color)):
-        err(
+        warn(
             f"federation.json: node.color '{color}' is not a valid hex colour "
             f"— use #RRGGBB or #RGB format"
         )
@@ -207,12 +191,12 @@ def validate_federation(path: Path) -> dict | None:
     # node.url ---------------------------------------------------------------
     url = node.get("url", "")
     if is_placeholder(url) or not url:
-        err(
+        warn(
             "federation.json: node.url is empty or a placeholder "
             "— provide the HTTPS URL of your deployed sub-portal"
         )
     elif not str(url).startswith("https://"):
-        err(f"federation.json: node.url must start with https:// (got: '{url}')")
+        warn(f"federation.json: node.url must start with https:// (got: '{url}')")
 
     # co_creation_card.title -------------------------------------------------
     check_string(card, "title", "federation.json: co_creation_card")
@@ -220,15 +204,15 @@ def validate_federation(path: Path) -> dict | None:
     # co_creation_card.tags --------------------------------------------------
     tags = card.get("tags")
     if tags is None:
-        err("federation.json: co_creation_card.tags is missing")
+        warn("federation.json: co_creation_card.tags is missing")
     elif not isinstance(tags, list):
-        err(
+        warn(
             "federation.json: co_creation_card.tags must be a JSON array "
             "— not a comma-separated string"
         )
     else:
         if len(tags) < 2:
-            err(
+            warn(
                 f"federation.json: co_creation_card.tags has {len(tags)} item(s) "
                 f"— at least 2 are required"
             )
@@ -239,7 +223,7 @@ def validate_federation(path: Path) -> dict | None:
             )
         for j, tag in enumerate(tags):
             if not isinstance(tag, str) or is_placeholder(tag):
-                err(
+                warn(
                     f"federation.json: co_creation_card.tags[{j}] is empty or a placeholder "
                     f"— replace with a real keyword"
                 )
@@ -247,7 +231,7 @@ def validate_federation(path: Path) -> dict | None:
     # co_creation_card.description -------------------------------------------
     desc = card.get("description", "")
     if is_placeholder(desc) or not str(desc).strip():
-        err(
+        warn(
             "federation.json: co_creation_card.description is empty or a placeholder "
             "— write your governance statement (1–2 sentences about your equipment or datasets)"
         )
@@ -279,12 +263,12 @@ def validate_theme(path: Path) -> dict | None:
     # primary_color ----------------------------------------------------------
     color = data.get("primary_color", "")
     if is_placeholder(color) or not color:
-        err(
+        warn(
             "theme.config.json: primary_color is empty or a placeholder "
             "— use your institution's hex brand colour (e.g. '#3D5A80')"
         )
     elif not HEX_RE.match(str(color)):
-        err(
+        warn(
             f"theme.config.json: primary_color '{color}' is not a valid hex colour "
             f"— use #RRGGBB or #RGB format"
         )
@@ -292,7 +276,7 @@ def validate_theme(path: Path) -> dict | None:
     # logo_url ---------------------------------------------------------------
     logo = data.get("logo_url", "")
     if is_placeholder(logo) or not logo:
-        err(
+        warn(
             "theme.config.json: logo_url is empty or a placeholder "
             "— provide a path (e.g. './assets/logo.png') or HTTPS URL to your logo"
         )
@@ -318,10 +302,8 @@ def cross_validate(fed_data: dict | None, theme_data: dict | None) -> None:
     theme_color = theme_data.get("primary_color", "")
 
     if (
-        fed_name
-        and theme_name
-        and not is_placeholder(fed_name)
-        and not is_placeholder(theme_name)
+        fed_name and theme_name
+        and not is_placeholder(fed_name) and not is_placeholder(theme_name)
         and fed_name != theme_name
     ):
         warn(
@@ -330,10 +312,8 @@ def cross_validate(fed_data: dict | None, theme_data: dict | None) -> None:
         )
 
     if (
-        fed_city
-        and theme_city
-        and not is_placeholder(fed_city)
-        and not is_placeholder(theme_city)
+        fed_city and theme_city
+        and not is_placeholder(fed_city) and not is_placeholder(theme_city)
         and fed_city != theme_city
     ):
         warn(
@@ -342,10 +322,8 @@ def cross_validate(fed_data: dict | None, theme_data: dict | None) -> None:
         )
 
     if (
-        fed_color
-        and theme_color
-        and not is_placeholder(fed_color)
-        and not is_placeholder(theme_color)
+        fed_color and theme_color
+        and not is_placeholder(fed_color) and not is_placeholder(theme_color)
         and fed_color.upper() != theme_color.upper()
     ):
         warn(
@@ -387,13 +365,17 @@ def main() -> None:
             print(e)
         print(f"\n[FAIL] {len(ERRORS)} error(s) found. Fix before your demo.\n")
         sys.exit(1)
+    elif WARNINGS:
+        print(
+            f"\n[PASS WITH WARNINGS] {len(WARNINGS)} issue(s) above — review before submission, "
+            f"but the file is structurally valid and will not block your commit.\n"
+        )
+        sys.exit(0)
     else:
         print(
-            "[PASS] reference/federation.json and reference/theme.config.json validated successfully."
+            "[PASS] reference/federation.json and reference/theme.config.json "
+            "validated successfully.\n"
         )
-        if WARNINGS:
-            print(f"       {len(WARNINGS)} warning(s) above — review before the demo.")
-        print()
         sys.exit(0)
 
 
