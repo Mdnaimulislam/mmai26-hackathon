@@ -224,23 +224,20 @@ These are optional extensions for teams that finish early or want to go deeper.
 
 ## 9. Judging Criteria
 
-| Category | Weighting | What judges are looking for |
-|---|---|---|
-| Sub-portal creativity and clarity | 25% | A clear, engaging, visually considered portal that represents a lab or institution well. It should feel purposeful, not like a generic template. |
-| SONAIR federation readiness | 15% | A working deployed portal, valid `reference/federation.json`, and basic compatibility with the SONAIR federation concept. |
-| Data analysis and plots | 25% | Meaningful plots from the UR robot teleoperation dataset, with sensible handling of timestamps, latency, delay, or synchronisation. |
-| Proposed metric | 15% | A clear and defensible metric that could help describe latency, synchronisation, sim-to-real transfer, or remote-to-real behaviour. |
-| Final presentation and GenAI use | 20% | Clear explanation of the portal, data findings, metric, design choices, and limitations. Thoughtful use of GenAI, with explanation of what it helped with and what decisions were made by the team. |
+All strands are judged on four criteria. Judges will ask questions during the demo — your team must understand what you built and why you made the decisions you made.
 
-### What does a strong submission look like?
+| Criterion | Weight | Weak | Strong |
+|---|---|---|---|
+| **Creativity** | 15% | Predictable framing; solution does what was expected with no distinctive angle | Original approach with a clear point of view; the portal, data analysis, and evidence framing say something distinctive about the team's perspective and the robotics problem |
+| **Evidence quality** | 35% | Metric reported without sample size or without explaining how it was derived from the teleoperation data | Metric with concrete numbers, mechanism explained, and comparison to a naive baseline (e.g. mean RTT vs percentile-based analysis) |
+| **Clarity** | 25% | Finding interpretable only by a robotics researcher | Finding interpretable by a lab manager, collaborator, or funder with no teleoperation expertise — naming is specific, consequences are stated in plain English |
+| **Deployability** | 25% | Portal is a static page with no federation compatibility or real institutional identity | Portal is live, federation-ready, theme-configurable, and contains specific enough content that an institution could adopt it as a real public-facing page |
 
-| Criterion | Weak | Strong |
-|---|---|---|
-| Sub-portal content | Template placeholder text only. No equipment list, no contact email. | Real institution name, specific equipment (model numbers), dataset details, and a contact email. |
-| `reference/federation.json` | All 10 fields present but lat/lon still at template defaults. Wrong map region. | All 10 fields with real values. Correct coordinates. Meaningful `co_creation_card.description`. |
-| `reference/theme.config.json` | File present but portal ignores it. `primary_color` hard-coded in HTML. | `fetch()` reads `reference/theme.config.json` on load. Colour change propagates in under 60 seconds. |
-| Evidence dashboard | Dashboard section absent or charts are screenshots. Interpretation missing. | RTT plot and latency histogram generated from the provided CSV/JSON. Interpretation cites real numbers and addresses operator safety. |
-| Demo and governance | Fewer than 3 steps completed. Cannot explain governance choice or data findings. | All five steps in 2.5 minutes. Governance and data interpretation both explained with specific numbers. |
+**Top submissions will:**
+- Present a portal that feels like a real institutional asset, not a hackathon prototype
+- Surface at least one insight from the teleoperation data that would not be obvious from summary statistics alone
+- Propose a metric that is clearly defensible and could be adopted by other labs
+- Show genuine creativity in how they framed the problem or communicated the evidence
 
 ---
 
