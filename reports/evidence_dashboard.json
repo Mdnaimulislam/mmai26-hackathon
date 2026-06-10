@@ -1,0 +1,244 @@
+{
+  "sensor_data_quality": {
+    "verdict": "CONDITIONAL",
+    "n_properties": 250,
+    "missingness_by_modality": {
+      "avgTemperature": 0.0306,
+      "avgHumidity": 0.0495,
+      "avgCo2": 0.3838,
+      "smart_meter_kwh": 0.0254,
+      "noise_db": 0.0805,
+      "survey_score": 0.972
+    },
+    "reliable_modalities": [
+      "avgTemperature",
+      "avgHumidity",
+      "smart_meter_kwh",
+      "noise_db"
+    ],
+    "unreliable_modalities": [
+      "avgCo2",
+      "survey_score"
+    ],
+    "high_dropout_property_count": 40,
+    "high_dropout_threshold": 0.5,
+    "note": "CO2 missing 38% overall; 40 properties >=50% dropout. Temperature/humidity/smart-meter reliable."
+  },
+  "mnar_analysis": {
+    "verdict": "PASS",
+    "patterns": [
+      {
+        "name": "CO2 sensor dropout concentrated in cold/worse-condition stock",
+        "sensor": "avgCo2",
+        "mechanism": "CO2 hardware fails more often in older, higher-deprivation properties; missingness is correlated with the outcome, so a CO2-dependent model is least reliable for the households most likely to be cold.",
+        "evidence": {
+          "n_high_dropout_properties": 40,
+          "mean_cold_rate_high_dropout": 0.303,
+          "mean_cold_rate_low_dropout": 0.2939,
+          "corr_dropout_vs_cold_rate": 0.0366
+        }
+      },
+      {
+        "name": "Resident survey MNAR \u2014 cold homes respond less and score lower",
+        "sensor": "survey_score",
+        "mechanism": "Thermal-comfort surveys are ~97% missing and the response is itself informative: colder/higher-deprivation properties respond less often, so observed survey scores over-represent comfortable homes.",
+        "evidence": {
+          "overall_response_rate": 0.028,
+          "corr_response_rate_vs_cold_rate": -0.3627
+        }
+      }
+    ],
+    "headline": "CO2 dropout vs cold-rate correlation = +0.04; high-dropout properties are +0.9% more cold-prone than the rest."
+  },
+  "subgroup_equity": {
+    "verdict": "FAIL",
+    "rows": [
+      {
+        "model": "model_a",
+        "group": "flat",
+        "auroc": 0.6784,
+        "gap_vs_terraced": -0.1511
+      },
+      {
+        "model": "model_a",
+        "group": "terraced",
+        "auroc": 0.8295,
+        "gap_vs_terraced": 0.0
+      },
+      {
+        "model": "model_a",
+        "group": "semi-detached",
+        "auroc": 0.839,
+        "gap_vs_terraced": 0.0095
+      },
+      {
+        "model": "model_a",
+        "group": "detached",
+        "auroc": 0.8379,
+        "gap_vs_terraced": 0.0084
+      }
+    ],
+    "reference_group": "terraced",
+    "max_abs_gap": 0.1511,
+    "worst_group": "flat",
+    "note": "Largest AUROC gap vs terraced is 0.151 (flat)."
+  },
+  "leakage_audit": {
+    "verdict": "PASS",
+    "split_method": "property-level (grouped by reference)",
+    "n_train_properties": 187,
+    "n_test_properties": 63,
+    "n_overlap_properties": 0,
+    "note": "No property reference appears in both folds; lag_temp cannot leak across the split."
+  },
+  "dataset_audit": {
+    "data_quality": "CONDITIONAL",
+    "split_integrity": "READY",
+    "equity": "CONDITIONAL",
+    "overall_verdict": "CONDITIONAL"
+  },
+  "leakage_inflation_auroc": 0.089,
+  "co2_lift_auroc": 0.0015,
+  "top10_upgrade_ranking": [
+    {
+      "reference": "U938798636",
+      "property_type": "terraced",
+      "co2_dropout_rate": 0.347,
+      "cold_risk_score": 0.8176,
+      "observed_cold_rate": 0.9736,
+      "winter_days": 303,
+      "rank": 1,
+      "data_reliability": "HIGH",
+      "sensor_repair_needed": false,
+      "model_reliability": "OK",
+      "recommended_action": "Rank by cold-risk score",
+      "flagged": true
+    },
+    {
+      "reference": "U410997120",
+      "property_type": "terraced",
+      "co2_dropout_rate": 0.349,
+      "cold_risk_score": 0.8171,
+      "observed_cold_rate": 0.967,
+      "winter_days": 303,
+      "rank": 2,
+      "data_reliability": "HIGH",
+      "sensor_repair_needed": false,
+      "model_reliability": "OK",
+      "recommended_action": "Rank by cold-risk score",
+      "flagged": true
+    },
+    {
+      "reference": "aldwick way 76",
+      "property_type": "semi-detached",
+      "co2_dropout_rate": 0.294,
+      "cold_risk_score": 0.8044,
+      "observed_cold_rate": 0.967,
+      "winter_days": 303,
+      "rank": 3,
+      "data_reliability": "HIGH",
+      "sensor_repair_needed": false,
+      "model_reliability": "OK",
+      "recommended_action": "Rank by cold-risk score",
+      "flagged": true
+    },
+    {
+      "reference": "5 pendwick cl",
+      "property_type": "semi-detached",
+      "co2_dropout_rate": 0.293,
+      "cold_risk_score": 0.8044,
+      "observed_cold_rate": 0.9736,
+      "winter_days": 303,
+      "rank": 4,
+      "data_reliability": "HIGH",
+      "sensor_repair_needed": false,
+      "model_reliability": "OK",
+      "recommended_action": "Rank by cold-risk score",
+      "flagged": true
+    },
+    {
+      "reference": "U882661553",
+      "property_type": "terraced",
+      "co2_dropout_rate": 0.259,
+      "cold_risk_score": 0.7911,
+      "observed_cold_rate": 0.9571,
+      "winter_days": 303,
+      "rank": 5,
+      "data_reliability": "HIGH",
+      "sensor_repair_needed": false,
+      "model_reliability": "OK",
+      "recommended_action": "Rank by cold-risk score",
+      "flagged": true
+    },
+    {
+      "reference": "U0034718",
+      "property_type": "detached",
+      "co2_dropout_rate": 0.792,
+      "cold_risk_score": 0.7893,
+      "observed_cold_rate": 0.9571,
+      "winter_days": 303,
+      "rank": 6,
+      "data_reliability": "LOW",
+      "sensor_repair_needed": true,
+      "model_reliability": "OK",
+      "recommended_action": "Rank by cold-risk AND dispatch CO2 sensor repair (data integrity)",
+      "flagged": true
+    },
+    {
+      "reference": "U032503",
+      "property_type": "terraced",
+      "co2_dropout_rate": 0.714,
+      "cold_risk_score": 0.789,
+      "observed_cold_rate": 0.9703,
+      "winter_days": 303,
+      "rank": 7,
+      "data_reliability": "LOW",
+      "sensor_repair_needed": true,
+      "model_reliability": "OK",
+      "recommended_action": "Rank by cold-risk AND dispatch CO2 sensor repair (data integrity)",
+      "flagged": true
+    },
+    {
+      "reference": "U678229542",
+      "property_type": "semi-detached",
+      "co2_dropout_rate": 0.324,
+      "cold_risk_score": 0.7867,
+      "observed_cold_rate": 0.9241,
+      "winter_days": 303,
+      "rank": 8,
+      "data_reliability": "HIGH",
+      "sensor_repair_needed": false,
+      "model_reliability": "OK",
+      "recommended_action": "Rank by cold-risk score",
+      "flagged": true
+    },
+    {
+      "reference": "U517557934",
+      "property_type": "semi-detached",
+      "co2_dropout_rate": 0.339,
+      "cold_risk_score": 0.7865,
+      "observed_cold_rate": 0.9307,
+      "winter_days": 303,
+      "rank": 9,
+      "data_reliability": "HIGH",
+      "sensor_repair_needed": false,
+      "model_reliability": "OK",
+      "recommended_action": "Rank by cold-risk score",
+      "flagged": true
+    },
+    {
+      "reference": "colwick road 33",
+      "property_type": "terraced",
+      "co2_dropout_rate": 0.289,
+      "cold_risk_score": 0.7859,
+      "observed_cold_rate": 0.9637,
+      "winter_days": 303,
+      "rank": 10,
+      "data_reliability": "HIGH",
+      "sensor_repair_needed": false,
+      "model_reliability": "OK",
+      "recommended_action": "Rank by cold-risk score",
+      "flagged": true
+    }
+  ]
+}

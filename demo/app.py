@@ -9,13 +9,19 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from datetime import date
 from pathlib import Path
 
 import joblib
 import pandas as pd
 
-from src.data_pipeline import load_and_merge
+# Repo root (parent of demo/) holds src/, data/, saved_models/, reference/.
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from src.data_pipeline import FEATURES, load_and_merge  # FEATURES = deployable set (no leakage)
 from src.evaluate import compute_metrics
 from src.evidence import (
     aggregate_dataset_audit,
@@ -24,18 +30,6 @@ from src.evidence import (
     compute_mnar_view,
     compute_sensor_quality_view,
 )
-
-FEATURES = [
-    "avgTemperature",
-    "avgHumidity",
-    "co2_imputed",
-    "co2_missing",
-    "smart_meter_kwh",
-    "noise_db",
-    "lag_temp",
-    "day_of_week",
-    "is_flat",
-]
 
 THRESHOLD = 0.5
 
@@ -79,7 +73,7 @@ def _validate_required_inputs(root: Path) -> tuple[Path, Path]:
 
 def generate_demo_outputs():
     """Load the notebook-trained model and evaluate it on the held-out test set."""
-    root = Path(__file__).resolve().parent
+    root = _REPO_ROOT
     raw_dir = root / "data" / "raw"
 
     test_path, model_path = _validate_required_inputs(root)
@@ -253,7 +247,7 @@ deliverables for participants.
     )
 
     # ── Submission form ────────────────────────────────────────────────────────
-    root = Path(__file__).resolve().parent
+    root = _REPO_ROOT
     ref_pathway = _load_reference(root, "omaib_pathway.json")
     ref_card = _load_reference(root, "housing_benchmark_card.json")
 
