@@ -1,14 +1,15 @@
-"""SCA-dream-soultion — Cold-Home Triage & Dataset Trust Auditor (website).
+"""SCA-dream-soultion — Cold-Home Triage (website).
 
-Interactive evidence dashboard + decision tool for a council housing team deciding
-which social-housing properties get a boiler upgrade this winter.
+Interactive tool for a council housing team deciding which social-housing
+properties get a boiler upgrade this winter. Three jobs in one tool:
+  1. rank homes for a boiler upgrade,
+  2. fuse + audit the multimodal sensor data behind the ranking,
+  3. prove the ranking is fair — and surface the data faults.
 
 Run:  streamlit run app.py
 
-Reads the precomputed bundle from `python build_submission.py`
-(reports/app_bundle.json) plus the dataset for the live Multimodal Explorer and
-what-if predictor. Self-healing: rebuilds the bundle from the committed dataset
-if it is missing (e.g. a fresh cloud deploy).
+Charts use Plotly (renders reliably inside Streamlit tabs). Reads the precomputed
+bundle from `python build_submission.py`; self-healing if the bundle is missing.
 """
 
 from __future__ import annotations
@@ -16,33 +17,39 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import altair as alt
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parent
 BUNDLE = ROOT / "reports" / "app_bundle.json"
 MODEL = ROOT / "saved_models" / "model_a_logistic_baseline.joblib"
 
+PT_ORDER = ["flat", "terraced", "semi-detached", "detached"]
+SEASON_MONTH = {"Winter (January)": 1, "Spring (April)": 4, "Summer (July)": 7, "Autumn (October)": 10}
+REL_COLORS = {"HIGH": "#1a7f37", "LOW": "#b42318"}
 VERDICT_COLOR = {"READY": "#1a7f37", "PASS": "#1a7f37", "CONDITIONAL": "#9a6700",
                  "NOT READY": "#b42318", "FAIL": "#b42318"}
-PT_ORDER = ["flat", "terraced", "semi-detached", "detached"]
-PT_COLORS = ["#2563eb", "#16a34a", "#9a6700", "#b42318"]
+FEAT_LABEL = {
+    "month": "Season (time of year)", "smart_meter_kwh": "Energy use", "avgHumidity": "Humidity",
+    "noise_db": "Noise", "is_flat": "Is a flat", "day_of_week": "Day of week",
+    "pt_terraced": "Type: terraced", "pt_semi_detached": "Type: semi-detached",
+    "pt_detached": "Type: detached", "co2_imputed": "CO₂ (imputed)", "co2_missing": "CO₂ missing flag",
+    "lag_temp": "Yesterday's temperature",
+}
 
-st.set_page_config(page_title="Cold-Home Triage — SCA-dream-soultion", page_icon="🏠", layout="wide")
+st.set_page_config(page_title="Cold-Home Triage", page_icon="🏠", layout="wide")
 st.markdown("""
 <style>
 .block-container {padding-top: 1.4rem;}
 .badge {display:inline-block;padding:3px 12px;border-radius:14px;color:#fff;font-weight:700;
         font-size:0.85rem;letter-spacing:.3px;}
 .small {color:#6b7280;font-size:0.85rem;}
-.card {border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;background:#fff;}
 h1,h2,h3 {letter-spacing:-.01em;}
 </style>
 """, unsafe_allow_html=True)
 
 
-# ── data loading (self-healing) ──────────────────────────────────────────────
 @st.cache_resource(show_spinner="First run: building models & evidence from the dataset…")
 def bootstrap() -> str:
     if BUNDLE.exists() and MODEL.exists():
@@ -76,7 +83,6 @@ def load_model():
 
 @st.cache_data(show_spinner=False)
 def load_features():
-    """Engineered frame + honest property split — for the live Multimodal Explorer."""
     from src.data_pipeline import build_feature_frame, load_and_merge, make_property_split
     feat = build_feature_frame(load_and_merge(ROOT / "data" / "raw"))
     tr, te, _, _ = make_property_split(feat, seed=42)
@@ -85,7 +91,6 @@ def load_features():
 
 @st.cache_data(show_spinner=False)
 def fit_eval(cols_tuple):
-    """Fit a logistic model on the chosen modality columns; return AUROC + per-type."""
     from sklearn.metrics import roc_auc_score
     from src.models import build_pipeline
     cols = list(cols_tuple)
@@ -105,8 +110,10 @@ def badge(v: str) -> str:
     return f'<span class="badge" style="background:{VERDICT_COLOR.get(v, "#475467")}">{v}</span>'
 
 
-def pt_scale():
-    return alt.Scale(domain=PT_ORDER, range=PT_COLORS)
+def show(fig, height=300):
+    fig.update_layout(height=height, margin=dict(l=8, r=8, t=30, b=8),
+                      plot_bgcolor="white", paper_bgcolor="white")
+    st.plotly_chart(fig, use_container_width=True)
 
 
 _status = bootstrap()
@@ -122,121 +129,77 @@ DEP = next((m for m in B["models"] if m.get("deployed")), B["models"][0])
 # ── sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### 🏠 Cold-Home Triage")
-    st.caption("Dataset Trust Auditor · Housing Strand")
+    st.caption("MultimodalAI'26 · Housing Strand")
     st.markdown(f"**Team:** {B['team']['name']}")
     st.divider()
-    ov = B["component_verdicts"]["overall"]
-    st.markdown(f"<div class='card'>Overall dataset verdict &nbsp; {badge(ov)}</div>", unsafe_allow_html=True)
-    cv = B["component_verdicts"]
-    st.markdown(
-        f"<div style='margin-top:8px'>"
-        f"<span class='small'>Data quality</span> {badge(cv['data_quality'])}<br>"
-        f"<span class='small'>Split integrity</span> {badge(cv['split_integrity'])}<br>"
-        f"<span class='small'>Equity</span> {badge(cv['equity'])}</div>", unsafe_allow_html=True)
-    st.divider()
-    SHOW_TABLES = st.checkbox("📋 Also show data tables under charts", value=False)
-    st.markdown(f"**Deployed:** {DEP['label']}")
-    st.caption(f"Generated {B['generated_at']} · {B['dataset']['n_properties']} properties · "
-               f"{B['dataset']['n_rows']:,} property-days · {len(B['models'])} models")
+    st.caption(f"{B['dataset']['n_properties']} properties · {B['dataset']['n_rows']:,} property-days · "
+               f"{len(B['models'])} models benchmarked")
 
-
-def maybe_table(df, hide_index=True):
-    if SHOW_TABLES:
-        st.dataframe(df, use_container_width=True, hide_index=hide_index)
-
-
-# ── header KPIs ──────────────────────────────────────────────────────────────
-st.title("Cold-Home Triage & Dataset Trust Auditor")
-st.markdown("Rank homes for a boiler upgrade, **fuse multimodal sensor data**, **audit the gaps**, and "
-            "**prove the ranking is fair** — honest about what it can't trust.")
-k = st.columns(5)
+# ── header ───────────────────────────────────────────────────────────────────
+st.title("Cold-Home Triage")
+st.markdown("**Three jobs in one tool:** rank homes for a boiler upgrade · fuse & audit the "
+            "**multimodal** sensor data behind the ranking · prove the ranking is fair — honest about "
+            "what the data can't support.")
+k = st.columns(4)
 k[0].metric("Properties", B["dataset"]["n_properties"])
 k[1].metric("Cold-risk rate", f"{B['dataset']['cold_rate']*100:.1f}%")
-k[2].metric("CO₂ missing (MNAR)", f"{B['dataset']['missingness_by_modality']['avgCo2']*100:.0f}%")
-k[3].metric("Sensor-repair flags", f"{B['sensor_health']['flagged_count_at_each_threshold'][2]}")
-k[4].metric("Deployed AUROC", f"{DEP['metrics']['auroc']:.2f}")
+k[2].metric("Deployed model AUROC", f"{DEP['metrics']['auroc']:.2f}")
+k[3].metric("Models benchmarked", len(B["models"]))
 
-tabs = st.tabs(["🏠 Upgrade Triage", "🔀 Multimodal Explorer", "📡 Sensor Health & MNAR",
-                "⚖️ Equity & Fairness", "🧩 Missingness Lab", "🔬 Evidence Dashboard",
-                "📋 Models & Governance"])
+tabs = st.tabs(["🏠 Priorities", "🔀 Multimodal Fusion", "🧩 Sensor Data & Missingness",
+                "⚖️ Equity & Fairness", "📊 Benchmark & Evidence"])
 
 # ════════════════════════════════════════════════════════════════════════════
-# TAB 1 — Upgrade Triage
+# TAB 1 — Priorities
 # ════════════════════════════════════════════════════════════════════════════
 with tabs[0]:
-    st.subheader("Winter upgrade priority list")
-    c1, c2 = st.columns([3, 2])
-    with c1:
-        budget = st.slider("Upgrade budget (top N properties)", 10, 250,
-                           B["coverage"]["top_ranked_count"], step=5)
-        only_reliable = st.checkbox("Only show properties with reliable sensor data", False)
-        view = rank_df[rank_df["data_reliability"] == "HIGH"] if only_reliable else rank_df
-        top = view.head(budget)
-        st.altair_chart(alt.Chart(top.head(20)).mark_bar().encode(
-            x=alt.X("cold_risk_score:Q", scale=alt.Scale(domain=[0, 1]), title="Cold-risk score (0–1)"),
-            y=alt.Y("reference:N", sort="-x", title=None),
-            color=alt.Color("data_reliability:N", scale=alt.Scale(domain=["HIGH", "LOW"],
-                            range=["#1a7f37", "#b42318"]), legend=alt.Legend(title="Sensor data")),
-            tooltip=["rank", "reference", "property_type", "cold_risk_score", "co2_dropout_rate",
-                     "data_reliability", "recommended_action"],
-        ).properties(height=460, title=f"Top 20 of {len(top)} prioritised properties"),
-            use_container_width=True)
-        maybe_table(top.head(budget))
-    with c2:
-        st.markdown("**Estate mix vs upgrade-list mix**")
-        est = pd.DataFrame([{"property_type": t, "n": B["dataset"]["property_type_counts"][t]}
-                            for t in PT_ORDER])
-        topmix = pd.DataFrame([{"property_type": d["property_type"], "n": d["n_in_top"]}
-                               for d in B["coverage"]["property_type_distribution"]])
-        d1, d2 = st.columns(2)
-        d1.altair_chart(alt.Chart(est).mark_arc(innerRadius=45).encode(
-            theta=alt.Theta("n:Q", stack=True), color=alt.Color("property_type:N", scale=pt_scale(),
-            legend=alt.Legend(orient="bottom", title=None)), tooltip=["property_type", "n"]
-        ).properties(height=210, title="Whole estate"), use_container_width=True)
-        d2.altair_chart(alt.Chart(topmix).mark_arc(innerRadius=45).encode(
-            theta=alt.Theta("n:Q", stack=True), color=alt.Color("property_type:N", scale=pt_scale(),
-            legend=alt.Legend(orient="bottom", title=None)), tooltip=["property_type", "n"]
-        ).properties(height=210, title=f"Top {B['coverage']['top_ranked_count']}"), use_container_width=True)
-        st.info(f"**Fair re-ranking:** within-type allocation adds "
-                f"**{B['coverage']['flats_added_under_fair_weighting']} flats** the global top "
-                f"{B['coverage']['top_ranked_count']} omits. Flats are genuinely warmer (cold rate "
-                f"{B['dataset']['cold_rate_by_type']['flat']*100:.0f}% vs "
-                f"~{B['dataset']['cold_rate_by_type']['terraced']*100:.0f}% for houses) — a single list "
-                f"favouring houses is *correct*, not biased.")
-    st.download_button("⬇ Download full ranked list (CSV)", rank_df.to_csv(index=False),
+    st.subheader("Top 20 homes that need a boiler upgrade")
+    st.caption(f"Out of all {B['dataset']['n_properties']} properties. Every property is scored by 5-fold "
+               "cross-validation — each one is rated by a model that did **not** train on it, so all 250 "
+               "get an honest, held-out score (no property is left untested).")
+    top = rank_df.head(20)
+    fig = px.bar(top, x="cold_risk_score", y="reference", orientation="h",
+                 color="data_reliability", range_x=[0, 1], color_discrete_map=REL_COLORS,
+                 category_orders={"reference": list(top["reference"])[::-1]},
+                 labels={"cold_risk_score": "Cold-risk score (0–1)", "reference": "",
+                         "data_reliability": "Sensor data"},
+                 hover_data=["rank", "property_type", "observed_cold_rate", "co2_dropout_rate",
+                             "recommended_action"])
+    show(fig, 480)
+    st.download_button("⬇ Download full ranked list of all 250 (CSV)", rank_df.to_csv(index=False),
                        "upgrade_ranking.csv", "text/csv")
+
     st.divider()
     lc, rc = st.columns(2)
     with lc:
-        st.markdown("#### 🔎 Inspect a property")
-        ref = st.selectbox("Property reference", rank_df["reference"].tolist())
+        st.markdown("#### 📑 Look up a property")
+        st.caption("Cold-risk score, sensor-data reliability, and the recommended action for any home.")
+        ref = st.selectbox("Choose a property", rank_df["reference"].tolist())
         row = rank_df[rank_df["reference"] == ref].iloc[0]
         st.markdown(f"**Rank #{int(row['rank'])} of {len(rank_df)}** · {row['property_type']}")
         m = st.columns(3)
         m[0].metric("Cold-risk score", f"{row['cold_risk_score']:.2f}")
-        m[1].metric("Observed cold rate", f"{row['observed_cold_rate']*100:.0f}%")
-        m[2].metric("CO₂ dropout", f"{row['co2_dropout_rate']*100:.0f}%")
-        st.markdown(f"- **Sensor data reliability:** {'🟢 HIGH' if row['data_reliability']=='HIGH' else '🔴 LOW'}")
+        m[1].metric("Observed cold days", f"{row['observed_cold_rate']*100:.0f}%")
+        m[2].metric("CO₂ sensor dropout", f"{row['co2_dropout_rate']*100:.0f}%")
+        st.markdown(f"- **Can we trust the sensor data here?** "
+                    f"{'🟢 Yes — sensors reliable' if row['data_reliability']=='HIGH' else '🔴 No — CO₂ sensor failing'}")
         st.markdown(f"- **Recommended action:** {row['recommended_action']}")
         if row["sensor_repair_needed"]:
-            st.warning("CO₂ sensor has failed for this property — dispatch a repair so future audits are complete.")
+            st.warning("This home's CO₂ sensor has failed — send a repair so future audits are complete.")
     with rc:
-        st.markdown("#### 🧪 What-if predictor")
-        st.caption("Interpretable logistic baseline — type conditions for a property-day and it scores it live.")
+        st.markdown("#### ⚡ Real-time cold-risk estimate")
+        st.caption("Enter a home's conditions and the model scores its cold-risk live (interpretable baseline).")
         model = load_model()
         if model is None:
             st.warning("Baseline model not found — run build_submission.py.")
         else:
             pt = st.selectbox("Property type", PT_ORDER, key="wf_pt")
-            mo = st.slider("Month", 1, 12, 1, key="wf_mo")
+            season = st.selectbox("Time of year", list(SEASON_MONTH.keys()), key="wf_s")
             hum = st.slider("Indoor humidity (%)", 30.0, 90.0, 60.0, key="wf_h")
             kwh = st.slider("Energy use (kWh/day)", 0.0, 60.0, 18.0, key="wf_k")
-            noise = st.slider("Ambient noise (dB)", 20.0, 80.0, 40.0, key="wf_n")
-            dow = st.select_slider("Day of week", options=list(range(7)), value=2,
-                                   format_func=lambda d: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][d], key="wf_d")
-            fr = pd.DataFrame([{"avgHumidity": hum, "smart_meter_kwh": kwh, "noise_db": noise,
-                                "day_of_week": dow, "month": mo, "is_flat": int(pt == "flat"),
-                                "pt_terraced": int(pt == "terraced"),
+            fr = pd.DataFrame([{"avgHumidity": hum, "smart_meter_kwh": kwh, "noise_db": 40.0,
+                                "day_of_week": 2, "month": SEASON_MONTH[season],
+                                "is_flat": int(pt == "flat"), "pt_terraced": int(pt == "terraced"),
                                 "pt_semi_detached": int(pt == "semi-detached"),
                                 "pt_detached": int(pt == "detached")}])
             prob = float(model.predict_proba(fr)[:, 1][0])
@@ -244,42 +207,34 @@ with tabs[0]:
             st.progress(min(max(prob, 0.0), 1.0))
 
 # ════════════════════════════════════════════════════════════════════════════
-# TAB 2 — Multimodal Explorer
+# TAB 2 — Multimodal Fusion
 # ════════════════════════════════════════════════════════════════════════════
 with tabs[1]:
-    st.subheader("Multimodal Fusion Explorer")
-    st.markdown("This is a **multimodal** problem: the cold-risk score fuses several sensor + metadata "
-                "streams. Below, see how much each modality contributes — then **build your own fusion** "
-                "and watch the model re-train live.")
+    st.subheader("Multimodal Fusion")
+    st.markdown("Cold-risk is predicted by **fusing several sensor + metadata streams**. Fusion beats any "
+                "single stream — the chart shows how much each one actually contributes.")
     mm = B["multimodal"]
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown("**Each modality on its own** (AUROC)")
-        sdf = pd.DataFrame(mm["single"])
-        st.altair_chart(alt.Chart(sdf).mark_bar(color="#2563eb").encode(
-            x=alt.X("auroc:Q", scale=alt.Scale(domain=[0.5, 0.85]), title="AUROC alone"),
-            y=alt.Y("modality:N", sort="-x", title=None), tooltip=["modality", "auroc"]
-        ).properties(height=280), use_container_width=True)
-        maybe_table(sdf)
-    with c2:
-        st.markdown("**Marginal value when fused** (leave-one-out)")
-        ldf = pd.DataFrame(mm["leave_one_out"])
-        st.altair_chart(alt.Chart(ldf).mark_bar().encode(
-            x=alt.X("marginal:Q", title="AUROC lost if this modality is removed"),
-            y=alt.Y("modality:N", sort="-x", title=None),
-            color=alt.condition(alt.datum.marginal >= 0.02, alt.value("#16a34a"), alt.value("#94a3b8")),
-            tooltip=["modality", "marginal", "auroc_without"]).properties(height=280), use_container_width=True)
-        maybe_table(ldf)
-    st.info(f"**Fusion beats any single stream:** the combined model reaches AUROC "
-            f"**{mm['combined_auroc']}** vs the best single modality "
-            f"(**{max(mm['single'], key=lambda s: s['auroc'])['modality']}**, "
-            f"{max(s['auroc'] for s in mm['single'])}). Energy and humidity carry the signal; **CO₂'s marginal "
-            f"value is only {[l['marginal'] for l in mm['leave_one_out'] if l['modality']=='CO₂'][0]:+}** — the "
-            f"same conclusion the Missingness Lab reaches from a different angle.")
+    best = max(mm["single"], key=lambda s: s["auroc"])
+    cA, cB = st.columns([2, 1])
+    with cA:
+        ldf = pd.DataFrame(mm["leave_one_out"]).sort_values("marginal")
+        ldf["strong"] = ldf["marginal"] >= 0.02
+        fig = px.bar(ldf, x="marginal", y="modality", orientation="h", color="strong",
+                     color_discrete_map={True: "#16a34a", False: "#94a3b8"},
+                     labels={"marginal": "AUROC lost if removed (real contribution)", "modality": ""},
+                     hover_data=["auroc_without"])
+        fig.update_layout(showlegend=False)
+        show(fig, 300)
+    with cB:
+        st.metric("Fused multimodal AUROC", mm["combined_auroc"])
+        st.metric(f"Best single ({best['modality']})", best["auroc"])
+        co2_marg = [l['marginal'] for l in mm['leave_one_out'] if l['modality'] == 'CO₂'][0]
+        st.caption(f"Energy & humidity carry the signal; **CO₂ adds only {co2_marg:+}** — the same conclusion "
+                   f"the Missingness tab reaches another way.")
 
     st.divider()
     st.markdown("#### 🛠 Build your own fusion (live)")
-    st.caption("Pick which modalities to feed the model. It re-fits on the held-out property split instantly.")
+    st.caption("Pick which modalities to feed the model — it re-fits on the held-out split instantly.")
     cols_map = dict(mm["columns"])
     chosen = st.multiselect("Modalities", list(cols_map.keys()), default=list(cols_map.keys()))
     use_lag = st.checkbox("➕ Add 'yesterday's indoor temperature' (⚠️ target leakage — for demonstration)", False)
@@ -291,279 +246,173 @@ with tabs[1]:
             auroc, per = fit_eval(tuple(sel_cols))
         a, b2 = st.columns([1, 2])
         with a:
-            st.metric("AUROC (your fusion)", f"{auroc:.3f}",
-                      delta=round(auroc - mm["combined_auroc"], 3))
-            st.caption(f"vs full multimodal fusion ({mm['combined_auroc']})")
+            st.metric("AUROC (your fusion)", f"{auroc:.3f}", delta=round(auroc - mm["combined_auroc"], 3))
             if use_lag:
-                st.error("Leakage on: the jump comes from ~yesterday's value of the target, not real skill.")
+                st.error("Leakage on: the jump is ~yesterday's value of the target, not real skill.")
         with b2:
             pdf = pd.DataFrame([{"property_type": t, "auroc": per[t]} for t in PT_ORDER if per[t] is not None])
-            st.altair_chart(alt.Chart(pdf).mark_bar().encode(
-                x=alt.X("property_type:N", sort=PT_ORDER, title=None),
-                y=alt.Y("auroc:Q", scale=alt.Scale(domain=[0.5, 1.0]), title="AUROC"),
-                color=alt.condition(alt.datum.auroc < 0.75, alt.value("#b42318"), alt.value("#2563eb")),
-                tooltip=["property_type", "auroc"]).properties(height=240, title="Your fusion — AUROC by type"),
-                use_container_width=True)
+            fig = px.bar(pdf, x="property_type", y="auroc", range_y=[0.5, 1.0],
+                         category_orders={"property_type": PT_ORDER},
+                         color="auroc", color_continuous_scale=["#b42318", "#9a6700", "#2563eb"],
+                         labels={"auroc": "AUROC", "property_type": ""})
+            fig.update_layout(coloraxis_showscale=False)
+            show(fig, 240)
 
 # ════════════════════════════════════════════════════════════════════════════
-# TAB 3 — Sensor Health & MNAR
+# TAB 3 — Sensor Data & Missingness
 # ════════════════════════════════════════════════════════════════════════════
 with tabs[2]:
-    st.subheader("Estate-wide sensor data-quality monitor")
+    st.subheader("Sensor data quality & the missing-data problem")
     miss = pd.DataFrame([{"modality": k2, "missing": v}
-                         for k2, v in B["sensor_health"]["missingness_by_modality"].items()])
+                         for k2, v in B["sensor_health"]["missingness_by_modality"].items()
+                         if k2 != "survey_score"]).sort_values("missing")
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown("**Missingness by modality**")
-        st.altair_chart(alt.Chart(miss).mark_bar().encode(
-            x=alt.X("missing:Q", axis=alt.Axis(format="%"), title="% missing"),
-            y=alt.Y("modality:N", sort="-x", title=None),
-            color=alt.condition(alt.datum.missing > 0.3, alt.value("#b42318"), alt.value("#1a7f37")),
-            tooltip=["modality", alt.Tooltip("missing:Q", format=".1%")]).properties(height=260),
-            use_container_width=True)
-        maybe_table(miss)
-        st.caption("Temperature, humidity, smart-meter, noise are reliable. CO₂ (38%) and the resident "
-                   "survey (97%) are Missing **Not** At Random.")
+        st.markdown("**Missingness by sensor**")
+        miss["high"] = miss["missing"] > 0.3
+        fig = px.bar(miss, x="missing", y="modality", orientation="h", color="high",
+                     color_discrete_map={True: "#b42318", False: "#1a7f37"},
+                     category_orders={"modality": list(miss["modality"])},
+                     labels={"missing": "% missing", "modality": ""})
+        fig.update_layout(showlegend=False, xaxis_tickformat=".0%")
+        show(fig, 240)
+        st.caption("Temperature, humidity, smart-meter, noise are reliable. **CO₂ is 38% missing** and "
+                   "Not At Random — concentrated in specific homes.")
     with c2:
-        st.markdown("**Configurable dropout threshold**")
-        thr = st.slider("Flag properties with CO₂ dropout ≥", 0.1, 0.95, 0.5, step=0.05)
+        st.markdown("**Which homes lose their CO₂ sensor?**")
+        thr = st.slider("Flag homes with CO₂ dropout ≥", 0.1, 0.95, 0.5, step=0.05)
         drop = pd.DataFrame(B["sensor_health"]["dropout_distribution"])
-        st.metric("Properties flagged for sensor repair", int((drop["co2_dropout_rate"] >= thr).sum()))
-        hist = alt.Chart(drop).mark_bar().encode(
-            x=alt.X("co2_dropout_rate:Q", bin=alt.Bin(maxbins=20), title="CO₂ dropout rate per property"),
-            y=alt.Y("count()", title="Properties"),
-            color=alt.condition(alt.datum.co2_dropout_rate >= thr, alt.value("#b42318"), alt.value("#94a3b8")))
-        rule = alt.Chart(pd.DataFrame({"t": [thr]})).mark_rule(color="#111", strokeDash=[4, 4]).encode(x="t:Q")
-        st.altair_chart((hist + rule).properties(height=230), use_container_width=True)
-    sweep = pd.DataFrame({"threshold": B["sensor_health"]["thresholds_tested"],
-                          "flagged": B["sensor_health"]["flagged_count_at_each_threshold"]})
-    st.markdown("**Threshold sensitivity**")
-    st.altair_chart(alt.Chart(sweep).mark_line(point=True).encode(
-        x=alt.X("threshold:Q", title="Dropout threshold"), y=alt.Y("flagged:Q", title="Properties flagged"),
-        tooltip=["threshold", "flagged"]).properties(height=220), use_container_width=True)
-    st.info("Recommended cut-off **0.5** → 40 properties (the natural break; the MNAR cohort sits at 70–95%). "
-            "0.3 → 140 (fatigue); 0.8 → 24 (misses borderline failures).")
-    st.markdown("#### MNAR patterns found")
-    for p in B["mnar_patterns"]:
-        with st.expander(f"🔸 {p['name']}  ·  sensor: {p['sensor']}"):
-            st.markdown(f"**Mechanism:** {p['mechanism']}")
-            st.json(p["evidence"])
+        st.metric("Homes flagged for sensor repair", int((drop["co2_dropout_rate"] >= thr).sum()))
+        fig = px.histogram(drop, x="co2_dropout_rate", nbins=20, color_discrete_sequence=["#7c3aed"],
+                           labels={"co2_dropout_rate": "CO₂ dropout rate per home"})
+        fig.add_vline(x=thr, line_dash="dash", line_color="#111")
+        show(fig, 230)
+
+    st.divider()
+    st.markdown("#### Missing-data algorithms compared — can a smarter one recover the CO₂ signal?")
+    imp_cmp = pd.DataFrame(B["missingness"]["imputation_comparison"])
+    c3, c4 = st.columns(2)
+    with c3:
+        fig = px.bar(imp_cmp.sort_values("auroc"), x="auroc", y="strategy", orientation="h",
+                     range_x=[0.80, 0.93], color_discrete_sequence=["#2563eb"],
+                     labels={"auroc": "AUROC", "strategy": ""}, hover_data=["model"])
+        show(fig, 220)
+        st.caption("The first three keep the **model fixed** and only change the missing-data algorithm "
+                   "(mean / interpolation / native-NaN) — AUROC barely moves. So **no imputation algorithm "
+                   "recovers signal that isn't there**; the CO₂ gap is a sensor-repair job, not an algorithm "
+                   "choice. (The fourth changes the *model*, so its gain is the algorithm, not CO₂.)")
+    with c4:
+        st.markdown("**What each algorithm does to the CO₂ distribution**")
+        dist = B["missingness"]["distribution"]
+        hist_df = pd.DataFrame(dist["histogram"]).melt(id_vars="co2", var_name="series", value_name="count")
+        fig = px.line(hist_df, x="co2", y="count", color="series",
+                      labels={"co2": "CO₂ (ppm)", "count": "Property-days", "series": ""})
+        fig.update_layout(legend=dict(orientation="h", y=-0.25))
+        show(fig, 230)
+        s = dist["stats"]
+        st.caption(f"Naive mean-imputation collapses the spread (std {s['observed']['std']} → "
+                   f"{s['mean_imputed']['std']}); interpolation keeps it realistic "
+                   f"({s['interpolated']['std']}) — but neither improves prediction.")
 
 # ════════════════════════════════════════════════════════════════════════════
 # TAB 4 — Equity & Fairness
 # ════════════════════════════════════════════════════════════════════════════
 with tabs[3]:
-    st.subheader("Subgroup equity & fairness audit")
+    st.subheader("Subgroup equity & fairness")
     eq = pd.DataFrame(B["subgroup_equity"])
     lr = next((m for m in B["models"] if m["id"] == "logreg_robust"), None)
     rf_flat = eq.loc[eq.property_type == "flat", "auroc"].iloc[0]
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown(f"**Deployed model AUROC by property type**")
-        st.altair_chart(alt.Chart(eq).mark_bar().encode(
-            x=alt.X("property_type:N", sort=PT_ORDER, title=None),
-            y=alt.Y("auroc:Q", scale=alt.Scale(domain=[0.5, 1.0]), title="AUROC"),
-            color=alt.condition(alt.datum.auroc < 0.75, alt.value("#b42318"), alt.value("#2563eb")),
-            tooltip=["property_type", "auroc", "n_properties", "cold_base_rate"]).properties(height=300),
-            use_container_width=True)
+        st.markdown("**Model reliability (AUROC) by property type**")
+        fig = px.bar(eq, x="property_type", y="auroc", range_y=[0.5, 1.0],
+                     category_orders={"property_type": PT_ORDER}, color="auroc",
+                     color_continuous_scale=["#b42318", "#9a6700", "#2563eb"],
+                     labels={"auroc": "AUROC", "property_type": ""},
+                     hover_data=["n_properties", "cold_base_rate"])
+        fig.update_layout(coloraxis_showscale=False)
+        show(fig, 300)
         if lr:
-            st.success(f"**Model choice fixed the equity gap.** The logistic baseline scored flats just "
+            st.success(f"**Model choice fixed the fairness gap.** A logistic model scored flats just "
                        f"**{lr['per_type_auroc']['flat']}**; the deployed Random Forest lifts flats to "
                        f"**{rf_flat}** — the gap vs houses shrinks from ~0.15 to ~0.04.")
     with c2:
         st.markdown("**Cold base rate by property type**")
-        st.altair_chart(alt.Chart(eq).mark_bar(color="#9a6700").encode(
-            x=alt.X("property_type:N", sort=PT_ORDER, title=None),
-            y=alt.Y("cold_base_rate:Q", axis=alt.Axis(format="%"), title="Cold-risk base rate"),
-            tooltip=["property_type", alt.Tooltip("cold_base_rate:Q", format=".1%")]).properties(height=300),
-            use_container_width=True)
-        st.caption("Flats share walls (thermal mass) and stay ~3°C warmer — why flats are still ranked within type.")
-    st.markdown("**Fairness disparity — high-risk flag rate by group**")
-    fair = pd.DataFrame(B["fairness"]["disparity_findings"])
-    overall = float(fair["overall_rate"].iloc[0]) if len(fair) else 0.0
-    fbar = alt.Chart(fair).mark_bar().encode(
-        x=alt.X("group:N", sort="-y", title=None),
-        y=alt.Y("high_risk_rate:Q", axis=alt.Axis(format="%"), title="Flagged high-risk"),
-        color=alt.condition(alt.datum.high_risk_rate >= overall, alt.value("#9a6700"), alt.value("#94a3b8")),
-        tooltip=["group", alt.Tooltip("high_risk_rate:Q", format=".1%"), "model_auroc", "n"])
-    orule = alt.Chart(pd.DataFrame({"y": [overall]})).mark_rule(color="#111", strokeDash=[5, 5]).encode(y="y:Q")
-    st.altair_chart((fbar + orule).properties(height=260), use_container_width=True)
-    maybe_table(fair)
-    st.caption(f"Dashed line = estate-wide flag rate ({overall*100:.0f}%). Flag-rate gaps mirror true cold "
-               f"differences, not unfairness — the real risk is reliability, fixed by per-type ranking.")
+        fig = px.bar(eq, x="property_type", y="cold_base_rate", category_orders={"property_type": PT_ORDER},
+                     color_discrete_sequence=["#9a6700"],
+                     labels={"cold_base_rate": "Share of days below 19°C", "property_type": ""})
+        fig.update_layout(yaxis_tickformat=".0%")
+        show(fig, 300)
+        st.info(f"**Flats are genuinely warmer** (cold rate "
+                f"{B['dataset']['cold_rate_by_type']['flat']*100:.0f}% vs "
+                f"~{B['dataset']['cold_rate_by_type']['terraced']*100:.0f}% for houses) because they share "
+                f"walls and hold heat. So a single list favouring houses is **correct, not biased** — but we "
+                f"still rank flats within their own type so the coldest flats aren't overlooked.")
+
     st.divider()
-    e1, e2 = st.columns(2)
-    with e1:
-        st.markdown("#### 🧠 What drives the score (deployed model)")
+    c3, c4 = st.columns(2)
+    with c3:
+        st.markdown("**High-risk flag rate by group**")
+        fair = pd.DataFrame(B["fairness"]["disparity_findings"])
+        overall = float(fair["overall_rate"].iloc[0]) if len(fair) else 0.0
+        fig = px.bar(fair.sort_values("high_risk_rate", ascending=False), x="group", y="high_risk_rate",
+                     color_discrete_sequence=["#9a6700"],
+                     labels={"high_risk_rate": "Flagged high-risk", "group": ""}, hover_data=["model_auroc", "n"])
+        fig.add_hline(y=overall, line_dash="dash", line_color="#111")
+        fig.update_layout(yaxis_tickformat=".0%")
+        show(fig, 260)
+        st.caption("Dashed line = estate-wide rate. Flag-rate gaps mirror true cold differences, not unfairness.")
+    with c4:
+        st.markdown("**What drives the score (deployed model)**")
         imp = pd.DataFrame(B["explainability_deployed"])
-        st.altair_chart(alt.Chart(imp).mark_bar(color="#2563eb").encode(
-            x=alt.X("importance:Q", title="Feature importance"),
-            y=alt.Y("feature:N", sort="-x", title=None), tooltip=["feature", "importance"]
-        ).properties(height=260), use_container_width=True)
-        st.caption("Random-forest importances. Season and energy dominate; CO₂ is absent by design.")
-    with e2:
-        st.markdown("#### 🎚 Decision-threshold sweep")
-        sw = pd.DataFrame(B["decision_threshold_sweep"]).melt(id_vars="threshold", var_name="metric", value_name="value")
-        st.altair_chart(alt.Chart(sw).mark_line(point=True).encode(
-            x=alt.X("threshold:Q"), y=alt.Y("value:Q"),
-            color=alt.Color("metric:N", legend=alt.Legend(orient="bottom", title=None)),
-            tooltip=["threshold", "metric", "value"]).properties(height=260), use_container_width=True)
-        st.caption("Cold-home false negatives are costly, so the operating threshold favours sensitivity.")
+        imp["feature"] = imp["feature"].map(lambda f: FEAT_LABEL.get(f, f))
+        fig = px.bar(imp.sort_values("importance"), x="importance", y="feature", orientation="h",
+                     color_discrete_sequence=["#2563eb"], labels={"importance": "Feature importance", "feature": ""})
+        show(fig, 260)
+        st.caption("Random-forest importances. **Season** (time of year) and **energy use** dominate; "
+                   "CO₂ is absent by design.")
 
 # ════════════════════════════════════════════════════════════════════════════
-# TAB 5 — Missingness Lab
+# TAB 5 — Benchmark & Evidence
 # ════════════════════════════════════════════════════════════════════════════
 with tabs[4]:
-    st.subheader("Missingness Lab — analysing the gaps, not just reporting them")
-    mech = B["missingness"]["mechanism"]
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown("**Is the CO₂ dropout random or patterned?**")
-        st.metric("Predictability of dropout from property type (AUROC)",
-                  f"{mech['predict_high_dropout_auroc']:.2f}")
-        st.markdown(f"- {mech['mechanism_verdict']}")
-        st.markdown(f"- Correlation of dropout with cold-risk: **{mech['corr_dropout_vs_cold_rate']}**")
-        st.caption(mech["outcome_note"])
-    with c2:
-        st.markdown("**High-dropout share by property type**")
-        shr = pd.DataFrame([{"property_type": k2, "share": v}
-                            for k2, v in mech["high_dropout_share_by_type"].items()])
-        st.altair_chart(alt.Chart(shr).mark_bar(color="#7c3aed").encode(
-            x=alt.X("property_type:N", sort=PT_ORDER, title=None),
-            y=alt.Y("share:Q", axis=alt.Axis(format="%"), title="% of type with >50% dropout"),
-            tooltip=["property_type", alt.Tooltip("share:Q", format=".1%")]).properties(height=260),
-            use_container_width=True)
-    st.markdown("#### Does *fixing* the missingness help? (four strategies)")
-    imp_cmp = pd.DataFrame(B["missingness"]["imputation_comparison"])
-    st.altair_chart(alt.Chart(imp_cmp).mark_bar(color="#2563eb").encode(
-        x=alt.X("auroc:Q", scale=alt.Scale(domain=[0.80, 0.93]), title="AUROC"),
-        y=alt.Y("strategy:N", sort="-x", title=None), tooltip=["strategy", "model", "auroc"]
-    ).properties(height=200), use_container_width=True)
-    maybe_table(imp_cmp)
-    st.info("First three hold the **model fixed** (logistic) and only change CO₂ handling — AUROC barely moves "
-            "(≈0.84). The fourth changes the *model* (gradient boosting, native NaN) — its gain is the algorithm, "
-            "not CO₂. Conclusion: the CO₂ gap is a **data-integrity** issue to repair, not a predictive loss.")
-    st.markdown("#### What each imputation does to the CO₂ distribution")
-    dist = B["missingness"]["distribution"]
-    hist_df = pd.DataFrame(dist["histogram"]).melt(id_vars="co2", var_name="series", value_name="count")
-    st.altair_chart(alt.Chart(hist_df).mark_line().encode(
-        x=alt.X("co2:Q", title="CO₂ (ppm)"), y=alt.Y("count:Q", title="Property-days"),
-        color=alt.Color("series:N", legend=alt.Legend(orient="bottom", title=None)),
-        tooltip=["co2", "series", "count"]).properties(height=280), use_container_width=True)
-    s = dist["stats"]
-    m = st.columns(3)
-    m[0].metric("Observed CO₂ std", s["observed"]["std"])
-    m[1].metric("Mean-imputed std", s["mean_imputed"]["std"], delta=round(s["mean_imputed"]["std"]-s["observed"]["std"],1))
-    m[2].metric("Interpolated std", s["interpolated"]["std"], delta=round(s["interpolated"]["std"]-s["observed"]["std"],1))
-    st.caption(dist["note"])
-
-# ════════════════════════════════════════════════════════════════════════════
-# TAB 6 — Evidence Dashboard
-# ════════════════════════════════════════════════════════════════════════════
-with tabs[5]:
-    st.subheader("Evidence Dashboard — five required views")
-    v = B["evidence_views"]
-    cols = st.columns(5)
-    labels = [("sensor_data_quality", "Sensor quality"), ("mnar_analysis", "MNAR"),
-              ("subgroup_equity", "Subgroup equity"), ("leakage_audit", "Leakage audit"),
-              ("dataset_audit", "Dataset audit")]
-    for col, (key, lab) in zip(cols, labels):
-        verdict = B["component_verdicts"]["overall"] if key == "dataset_audit" else v[key]
-        col.markdown(f"<div class='card'><div class='small'>{lab}</div>{badge(verdict)}</div>",
-                     unsafe_allow_html=True)
-    st.divider()
-    st.markdown("#### 4 · Leakage audit — why we excluded `lag_temp`")
-    lk = B["leakage"]
-    leak_df = pd.DataFrame({
-        "model": ["No lag (honest)", "+ lag_temp", "+ lag_temp + row-split"],
-        "order": [0, 1, 2],
-        "auroc": [lk["linear_baseline_auroc"], lk["linear_baseline_auroc"] + lk["lag_inflation_auroc"],
-                  lk["row_split_auroc"]]})
-    bars = alt.Chart(leak_df).mark_bar(color="#7c3aed").encode(
-        x=alt.X("auroc:Q", scale=alt.Scale(domain=[0.5, 1.0]), title="AUROC (0.5 = chance)"),
-        y=alt.Y("model:N", sort=alt.SortField("order"), title=None), tooltip=["model", "auroc"])
-    txt = alt.Chart(leak_df).mark_text(align="left", dx=4, color="#111").encode(
-        x="auroc:Q", y=alt.Y("model:N", sort=alt.SortField("order")),
-        text=alt.Text("auroc:Q", format=".3f"))
-    st.altair_chart((bars + txt).properties(height=200), use_container_width=True)
-    maybe_table(leak_df.drop(columns="order"))
-    st.markdown(f"Within the same (logistic) model, adding `lag_temp` inflates AUROC by "
-                f"**+{lk['lag_inflation_auroc']}** — but it is ~yesterday's value of the target, so the gain is "
-                f"**target leakage, not skill**. The deployed Random Forest reaches **{lk['deployed_auroc']}** "
-                f"honestly without it. Split is **property-level** "
-                f"({lk['split_audit']['n_train_properties']} train / {lk['split_audit']['n_test_properties']} "
-                f"test, {lk['split_audit']['n_overlap_properties']} overlapping properties).")
-    st.markdown("#### 1 · Data quality & 2 · MNAR")
-    st.markdown(f"CO₂ adds only **{lk['co2_lift_auroc']:+}** AUROC within a fixed model — the dropout is an "
-                "**asset-management** problem (repair sensors), not a ranking-bias problem. See the Missingness Lab.")
-    st.markdown("#### 3 · Subgroup equity — AUROC gap vs terraced reference")
-    eqd = pd.DataFrame(B["subgroup_equity"])
-    st.altair_chart(alt.Chart(eqd).mark_bar().encode(
-        x=alt.X("gap_vs_terraced:Q", title="AUROC gap vs terraced", axis=alt.Axis(format="+.2f")),
-        y=alt.Y("property_type:N", sort=PT_ORDER, title=None),
-        color=alt.condition(alt.datum.gap_vs_terraced <= -0.05, alt.value("#9a6700"), alt.value("#1a7f37")),
-        tooltip=["property_type", "auroc", "gap_vs_terraced", "n_properties", "cold_base_rate"]
-    ).properties(height=200), use_container_width=True)
-    maybe_table(eqd)
-    st.caption("All groups within ~0.04 of the terraced reference under the deployed model.")
-
-# ════════════════════════════════════════════════════════════════════════════
-# TAB 7 — Models & Governance
-# ════════════════════════════════════════════════════════════════════════════
-with tabs[6]:
-    st.subheader("Model evidence cards & governance verdicts")
+    st.subheader("Model benchmark & evidence")
     comp = pd.DataFrame([{"model": m["label"], "AUROC": m["metrics"]["auroc"],
-                          "flat AUROC": m["per_type_auroc"].get("flat", 0),
-                          "sensitivity": m["metrics"]["sensitivity"], "PPV": m["metrics"]["ppv"],
-                          "verdict": m["verdict"]} for m in B["models"]])
-    vscale = alt.Scale(domain=list(VERDICT_COLOR.keys()), range=list(VERDICT_COLOR.values()))
-    perf = comp.melt(id_vars=["model", "verdict"], value_vars=["AUROC", "flat AUROC"],
-                     var_name="metric", value_name="score")
-    cc1, cc2 = st.columns([3, 2])
-    with cc1:
-        st.markdown("**Overall vs flat AUROC, per model**")
-        st.altair_chart(alt.Chart(perf).mark_bar().encode(
-            y=alt.Y("model:N", sort="-x", title=None), yOffset="metric:N",
-            x=alt.X("score:Q", scale=alt.Scale(domain=[0.5, 0.95]), title="AUROC"),
-            color=alt.Color("metric:N", scale=alt.Scale(domain=["AUROC", "flat AUROC"],
-                            range=["#2563eb", "#9a6700"]), legend=alt.Legend(orient="bottom", title=None)),
-            tooltip=["model", "metric", "score"]).properties(height=320), use_container_width=True)
-    with cc2:
-        st.markdown("**Verdict mix across models**")
-        vc = comp["verdict"].value_counts().reset_index()
-        vc.columns = ["verdict", "n"]
-        st.altair_chart(alt.Chart(vc).mark_arc(innerRadius=50).encode(
-            theta=alt.Theta("n:Q", stack=True),
-            color=alt.Color("verdict:N", scale=vscale, legend=alt.Legend(orient="bottom", title=None)),
-            tooltip=["verdict", "n"]).properties(height=300), use_container_width=True)
-    maybe_table(comp)
+                          "flat AUROC": m["per_type_auroc"].get("flat", 0)} for m in B["models"]])
+    perf = comp.melt(id_vars=["model"], value_vars=["AUROC", "flat AUROC"], var_name="metric", value_name="score")
+    st.markdown("**Six models benchmarked — overall accuracy and fairness to flats**")
+    fig = px.bar(perf, x="score", y="model", color="metric", barmode="group", orientation="h",
+                 range_x=[0.5, 0.95], color_discrete_map={"AUROC": "#2563eb", "flat AUROC": "#9a6700"},
+                 labels={"score": "AUROC (5-fold property CV)", "model": "", "metric": ""})
+    fig.update_layout(legend=dict(orientation="h", y=-0.18))
+    show(fig, 340)
 
     st.divider()
-    st.markdown("#### 🔽 Inspect a model")
+    st.markdown("#### 🔬 Benchmark a model")
     pick = st.selectbox("Choose a model", [m["label"] for m in B["models"]])
     M = next(m for m in B["models"] if m["label"] == pick)
     st.markdown(f"{badge(M['verdict'])} &nbsp; <span class='small'>missingness: {M['missingness']} · "
                 f"interpretability: {M['interpretable']}</span>", unsafe_allow_html=True)
     prof = pd.DataFrame([{"metric": lab, "value": M["metrics"][kk]} for kk, lab in
-                         [("auroc", "AUROC"), ("sensitivity", "Sensitivity"), ("specificity", "Specificity"),
-                          ("ppv", "PPV"), ("npv", "NPV"), ("f1", "F1")]])
+                         [("f1", "F1"), ("npv", "NPV"), ("ppv", "PPV"), ("specificity", "Specificity"),
+                          ("sensitivity", "Sensitivity"), ("auroc", "AUROC")]])
     pcol, tcol = st.columns(2)
     with pcol:
         st.markdown("**Metric profile**")
-        st.altair_chart(alt.Chart(prof).mark_bar(color="#2563eb").encode(
-            x=alt.X("value:Q", scale=alt.Scale(domain=[0, 1]), title=None),
-            y=alt.Y("metric:N", sort=["AUROC", "Sensitivity", "Specificity", "PPV", "NPV", "F1"], title=None),
-            tooltip=["metric", "value"]).properties(height=240), use_container_width=True)
+        fig = px.bar(prof, x="value", y="metric", orientation="h", range_x=[0, 1],
+                     color_discrete_sequence=["#2563eb"], labels={"value": "", "metric": ""})
+        show(fig, 240)
     with tcol:
         pt_df = pd.DataFrame([{"property_type": t, "auroc": M["per_type_auroc"][t]} for t in PT_ORDER
                               if t in M["per_type_auroc"]])
         if len(pt_df):
             st.markdown("**AUROC by property type**")
-            st.altair_chart(alt.Chart(pt_df).mark_bar().encode(
-                x=alt.X("property_type:N", sort=PT_ORDER, title=None),
-                y=alt.Y("auroc:Q", scale=alt.Scale(domain=[0.5, 1.0]), title=None),
-                color=alt.condition(alt.datum.auroc < 0.75, alt.value("#b42318"), alt.value("#2563eb")),
-                tooltip=["property_type", "auroc"]).properties(height=240), use_container_width=True)
+            fig = px.bar(pt_df, x="property_type", y="auroc", range_y=[0.5, 1.0],
+                         category_orders={"property_type": PT_ORDER}, color="auroc",
+                         color_continuous_scale=["#b42318", "#9a6700", "#2563eb"],
+                         labels={"auroc": "AUROC", "property_type": ""})
+            fig.update_layout(coloraxis_showscale=False)
+            show(fig, 240)
     st.markdown(f"**Assessment:** {M['narrative']}")
     with st.expander("Deployment questions (q1–q8)"):
         QLABEL = {"q1": "How many cold properties will it miss?", "q2": "When it flags, how often is it right?",
@@ -573,11 +422,3 @@ with tabs[6]:
         for q, qa in M["deployment_questions"].items():
             st.markdown(f"**{QLABEL.get(q, q)}**  \n{qa}")
 
-    st.divider()
-    st.markdown("#### Component verdicts")
-    cc = st.columns(4)
-    for col, (k2, lab) in zip(cc, [("data_quality", "Data quality"), ("split_integrity", "Split integrity"),
-                                   ("equity", "Equity"), ("overall", "OVERALL")]):
-        col.markdown(f"**{lab}**<br>{badge(B['component_verdicts'][k2])}", unsafe_allow_html=True)
-    st.caption("Files: reference/omaib_pathway.json · reference/housing_benchmark_card.json — "
-               "validated by `python validate_submission.py`.")
