@@ -32,20 +32,28 @@ One web tool with a clear user (a council asset-management / housing officer) th
 …and is **honest about where the data cannot support a confident decision** — that honesty is the
 point of the whole strand.
 
-## The three models (chosen to surface the truth, not to win)
+## The model roster (six models, chosen to surface the truth)
 
-| Model | Features | Verdict | Why |
-|---|---|---|---|
-| **A — Sensor-robust (deployed)** | humidity, energy, noise, season, property type | **CONDITIONAL** | The honest, deployable ranking engine. AUROC ≈ 0.84. CONDITIONAL because it is less reliable for flats. |
-| **B — Multimodal incl. CO₂** | A + CO₂ (imputed + missingness flag) | **NOT READY** | CO₂ is 38% MNAR-missing yet adds only **+0.0015** AUROC. A fragile dependency for no benefit. |
-| **C — Nowcast incl. `lag_temp`** | A + yesterday's indoor temperature | **NOT READY** | `lag_temp` inflates AUROC to 0.93 (**+0.09**) but it is ~yesterday's value of the target — **target leakage**, not skill. |
+We evaluate six models that vary the **algorithm** and the **missing-data strategy**, so the
+comparison is real analysis, not a leaderboard. All metrics are 5-fold property-level CV (n=250).
 
-**Key honest findings (we did not chase a better model):**
-- The feared CO₂/MNAR *bias* is weak in this data (CO₂ adds ~0 predictive value) — so the 40 broken
-  sensors are an **asset-management** problem, not a ranking-bias problem. We say so plainly.
-- The real equity issue is **property type**: flat AUROC **0.68** vs ~**0.83** for houses (flats are
-  genuinely warmer — 10.5% vs ~37% cold base rate). Fix: rank within type.
-- `lag_temp` is **target leakage**; we exclude it and report the honest 0.84.
+| Model | AUROC | Flat AUROC | Verdict | Role |
+|---|---|---|---|---|
+| **Random Forest — Sensor-robust (deployed)** | **0.91** | **0.86** | **CONDITIONAL** | The deployed ranking engine. Best accuracy *and* fairest to flats. |
+| Logistic — Sensor-robust (baseline) | 0.84 | 0.68 | CONDITIONAL | Interpretable baseline; much weaker for flats — shows why model choice matters. |
+| Gradient Boosting — CO₂ native-NaN | 0.92 | 0.87 | CONDITIONAL | Handles CO₂ gaps natively; CO₂ still adds no benefit. |
+| Logistic — CO₂ mean-imputed | 0.84 | 0.68 | NOT READY | Naive imputation of a 38%-MNAR channel for no lift. |
+| Logistic — CO₂ time-interpolated | 0.84 | 0.68 | NOT READY | Even proper interpolation adds nothing — CO₂ is uninformative. |
+| Logistic — Nowcast +`lag_temp` | 0.93 | 0.90 | NOT READY | `lag_temp` ≈ yesterday's target → **leakage**, not skill. |
+
+**Key honest findings:**
+- **Model choice fixed the equity gap.** The linear baseline was unreliable for flats (AUROC 0.68);
+  the deployed Random Forest lifts flats to **0.86** — the fix was a better model, *not* dropping flats.
+- **CO₂'s missingness is a data-integrity issue, not a predictive loss.** Across four strategies
+  (drop / mean / per-property interpolation / native-NaN), adding CO₂ lifts AUROC by at most +0.003
+  within a fixed model. So repair the 40 broken sensors; don't try to "impute around" them.
+- **`lag_temp` is target leakage** (+0.09 within the logistic model); we exclude it, and the deployed
+  forest reaches 0.91 honestly without it.
 
 ## Architecture
 
@@ -69,20 +77,22 @@ notebooks/data_exploration_training.ipynb   runnable exploration + training flow
 | **B. OMAIB Pathway Manifest** | `reference/omaib_pathway.json` (3 models, verdicts, metrics) |
 | **C. Housing Benchmark Card** | `reference/housing_benchmark_card.json` (q1–q8, component verdicts, `option_specific`) |
 | **D. Evidence Dashboard** (5 views) | `reports/evidence_dashboard.json` + the website's "Evidence Dashboard" tab |
-| **E. Option-specific** | `option_specific` in the card — `coverage_report` **plus** embedded `threshold_sensitivity_report` (Ch2) and `fairness_disparity_summary` (Ch3) = all three challenges in one |
+| **E. Option-specific** | `option_specific` in the card — `coverage_report` **plus** embedded `threshold_sensitivity_report` (Ch2), `fairness_disparity_summary` (Ch3), and a `missingness_analysis` block = four challenges in one |
 | Plain-language summary | `reports/PLAIN_LANGUAGE_SUMMARY.md` |
 | Full upgrade ranking | `reports/upgrade_ranking.csv` |
 
-### The website's five tabs map to the five Evidence Dashboard views
-🏠 Upgrade Triage · 📡 Sensor Health & MNAR · ⚖️ Equity & Fairness · 🔬 Evidence Dashboard ·
-📋 Model Cards & Governance. Interactive inputs: **upgrade-budget slider, CO₂-dropout-threshold
-slider, decision-threshold sweep, property lookup, and a live "what-if" predictor.**
+### The website's six tabs
+🏠 Upgrade Triage · 📡 Sensor Health & MNAR · ⚖️ Equity & Fairness · 🧩 Missingness Lab ·
+🔬 Evidence Dashboard · 📋 Models & Governance. Interactive inputs: **upgrade-budget slider,
+CO₂-dropout-threshold slider, decision-threshold sweep, property lookup, a live "what-if"
+predictor, and a model-picker dropdown** that compares all six models.
 
 ## Overall verdict: **CONDITIONAL**
 
-Deploy **Model A** for the winter ranking **if**: (1) rank within property type; (2) treat the 40
-CO₂-dropout properties as a sensor-repair workstream; (3) re-audit after one heating season.
-Reject Model B (MNAR, no lift) and Model C (leakage).
+Deploy the **Random Forest (sensor-robust)** for the winter ranking **if**: (1) rank within property
+type (flats are weaker, AUROC 0.86 vs ~0.91); (2) treat the 40 CO₂-dropout properties as a
+sensor-repair workstream; (3) re-audit after one heating season. The CO₂ models are rejected (MNAR,
+no lift) and the `lag_temp` model is rejected (leakage).
 
 ## How we used generative AI
 

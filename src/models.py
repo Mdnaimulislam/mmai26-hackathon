@@ -18,10 +18,19 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+
+from .data_pipeline import (
+    FEATURES_CO2_INTERP,
+    FEATURES_CO2_MEAN,
+    FEATURES_CO2_RAW,
+    FEATURES_LAG,
+    FEATURES_ROBUST,
+)
 
 
 def build_pipeline(seed: int = 42) -> Pipeline:
@@ -40,14 +49,62 @@ def build_pipeline(seed: int = 42) -> Pipeline:
     )
 
 
+def make_estimator(algo: str, seed: int = 42):
+    """Estimator factory for the model roster.
+
+    * ``logreg`` — interpretable linear model (median impute + scale)
+    * ``rf``     — random forest, captures non-linear interactions (median impute)
+    * ``hgb``    — gradient boosting with NATIVE missing-value handling (no imputer)
+    """
+    if algo == "logreg":
+        return build_pipeline(seed)
+    if algo == "rf":
+        return Pipeline([
+            ("impute", SimpleImputer(strategy="median")),
+            ("clf", RandomForestClassifier(
+                n_estimators=120, max_depth=14, min_samples_leaf=20, n_jobs=-1,
+                class_weight="balanced", random_state=seed)),
+        ])
+    if algo == "hgb":
+        # HistGradientBoosting routes NaNs down both splits -> no imputation needed.
+        return HistGradientBoostingClassifier(
+            max_iter=200, learning_rate=0.08, max_depth=6, random_state=seed)
+    raise ValueError(f"unknown algo {algo!r}")
+
+
 def train_model(train_df: pd.DataFrame, features: list[str], seed: int = 42) -> Pipeline:
     pipe = build_pipeline(seed)
     pipe.fit(train_df[features], train_df["cold_risk"])
     return pipe
 
 
+# The roster the website's model-picker and the benchmark card iterate over.
+# Each spec varies the ALGORITHM and/or the MISSING-DATA STRATEGY so the comparison
+# is meaningful. `deployed` marks the model that powers the live ranking + predictor.
+MODEL_SPECS = [
+    {"id": "rf_robust", "label": "Random Forest — Sensor-robust (deployed)",
+     "algo": "rf", "features": FEATURES_ROBUST, "missingness": "CO2 dropped",
+     "interpretable": "medium", "verdict": "CONDITIONAL", "deployed": True},
+    {"id": "logreg_robust", "label": "Logistic Regression — Sensor-robust (interpretable baseline)",
+     "algo": "logreg", "features": FEATURES_ROBUST, "missingness": "CO2 dropped",
+     "interpretable": "high", "verdict": "CONDITIONAL", "deployed": False},
+    {"id": "hgb_co2_native", "label": "Gradient Boosting — CO2 (native NaN)",
+     "algo": "hgb", "features": FEATURES_CO2_RAW, "missingness": "native (no imputation)",
+     "interpretable": "medium", "verdict": "CONDITIONAL", "deployed": False},
+    {"id": "logreg_co2_mean", "label": "Logistic — CO2 mean-imputed",
+     "algo": "logreg", "features": FEATURES_CO2_MEAN, "missingness": "global-mean impute + flag",
+     "interpretable": "high", "verdict": "NOT READY", "deployed": False},
+    {"id": "logreg_co2_interp", "label": "Logistic — CO2 time-interpolated",
+     "algo": "logreg", "features": FEATURES_CO2_INTERP, "missingness": "per-property interpolation + flag",
+     "interpretable": "high", "verdict": "NOT READY", "deployed": False},
+    {"id": "logreg_lag", "label": "Logistic — Nowcast + lag_temp (leakage)",
+     "algo": "logreg", "features": FEATURES_LAG, "missingness": "n/a",
+     "interpretable": "high", "verdict": "NOT READY", "deployed": False},
+]
+
+
 def explain(model: Pipeline, features: list[str], top_k: int = 6) -> list[dict]:
-    """Plain-language driver list from logistic coefficients (challenge-3 layer)."""
+    """Plain-language driver list from logistic coefficients (signed direction)."""
     coefs = model.named_steps["clf"].coef_[0]
     order = np.argsort(np.abs(coefs))[::-1][:top_k]
     return [
@@ -58,6 +115,16 @@ def explain(model: Pipeline, features: list[str], top_k: int = 6) -> list[dict]:
         }
         for i in order
     ]
+
+
+def explain_importances(model, features: list[str], top_k: int = 8) -> list[dict]:
+    """Global feature importance for the deployed tree model (unsigned magnitude)."""
+    clf = model.named_steps["clf"] if hasattr(model, "named_steps") else model
+    imp = getattr(clf, "feature_importances_", None)
+    if imp is None:
+        return []
+    order = np.argsort(imp)[::-1][:top_k]
+    return [{"feature": features[i], "importance": round(float(imp[i]), 4)} for i in order]
 
 
 class TriageRouter:

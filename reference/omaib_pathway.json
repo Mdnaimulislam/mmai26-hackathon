@@ -10,10 +10,34 @@
   },
   "models": [
     {
-      "name": "Model A \u2014 Sensor-robust (deployed)",
+      "name": "Random Forest \u2014 Sensor-robust (deployed)",
       "verdict": "CONDITIONAL",
-      "conditions": "Rank within property type (flats less reliable, AUROC 0.6784 vs 0.8295); pair with a CO2 sensor-repair programme; re-audit after one heating season.",
-      "narrative": "Deployed model. Sensor-robust logistic model (no CO2, no lag_temp): AUROC 0.8412, PPV 0.5855, sensitivity 0.7726 at threshold 0.51 (5-fold property-level CV, n=250). It powers the upgrade ranking. CONDITIONAL because reliability is lower for flats (AUROC 0.6784 vs 0.8295 terraced, n=70 flats): rank within property type rather than on one cross-type list.",
+      "conditions": "Deployed. Rank within property type (flats 0.8642 vs 0.9047); pair with CO2 sensor repair; surface a reliability flag; re-audit after one heating season.",
+      "narrative": "Random Forest \u2014 Sensor-robust (deployed) \u2014 missingness: CO2 dropped. AUROC 0.9129, sensitivity 0.8874, PPV 0.6378 at threshold 0.43 (5-fold property-level CV, n=250). Flats AUROC 0.8642 vs terraced 0.9047. Deployed model \u2014 non-linear, best accuracy and the fairest across property types (flats 0.8642). CONDITIONAL: small residual flat gap to monitor; rank within type.",
+      "metrics": {
+        "auroc": 0.9129,
+        "auprc": 0.7888,
+        "brier_score": 0.1169,
+        "sensitivity": 0.8874,
+        "specificity": 0.7887,
+        "ppv": 0.6378,
+        "npv": 0.9435,
+        "f1": 0.7422,
+        "threshold": 0.43,
+        "n_properties": 250
+      },
+      "subgroup_gaps": {
+        "flat": -0.0405,
+        "terraced": 0.0,
+        "semi-detached": -0.0017,
+        "detached": -0.0111
+      }
+    },
+    {
+      "name": "Logistic Regression \u2014 Sensor-robust (interpretable baseline)",
+      "verdict": "CONDITIONAL",
+      "conditions": "Interpretable baseline only \u2014 less reliable for flats (0.6784); use the Random Forest for the live ranking and this model for plain-language reasons.",
+      "narrative": "Logistic Regression \u2014 Sensor-robust (interpretable baseline) \u2014 missingness: CO2 dropped. AUROC 0.8412, sensitivity 0.7726, PPV 0.5855 at threshold 0.51 (5-fold property-level CV, n=250). Flats AUROC 0.6784 vs terraced 0.8295. Interpretable linear baseline. Much weaker for flats (0.6784) \u2014 evidence that a non-linear model, not abandoning flats, closes the equity gap. CONDITIONAL.",
       "metrics": {
         "auroc": 0.8412,
         "auprc": 0.6822,
@@ -34,10 +58,34 @@
       }
     },
     {
-      "name": "Model B \u2014 Multimodal incl. CO2",
+      "name": "Gradient Boosting \u2014 CO2 (native NaN)",
+      "verdict": "CONDITIONAL",
+      "conditions": "Strong alternative; CO2 adds no benefit, so prefer the simpler CO2-free forest unless native missing-handling is specifically required.",
+      "narrative": "Gradient Boosting \u2014 CO2 (native NaN) \u2014 missingness: native (no imputation). AUROC 0.9151, sensitivity 0.8746, PPV 0.6494 at threshold 0.28 (5-fold property-level CV, n=250). Flats AUROC 0.8672 vs terraced 0.9067. Handles CO2 dropout natively (no imputation) yet CO2 only shifts AUROC +0.0015 overall \u2014 confirming the gap is data-integrity, not predictive.",
+      "metrics": {
+        "auroc": 0.9151,
+        "auprc": 0.7934,
+        "brier_score": 0.1056,
+        "sensitivity": 0.8746,
+        "specificity": 0.8021,
+        "ppv": 0.6494,
+        "npv": 0.9385,
+        "f1": 0.7454,
+        "threshold": 0.28,
+        "n_properties": 250
+      },
+      "subgroup_gaps": {
+        "flat": -0.0395,
+        "terraced": 0.0,
+        "semi-detached": -0.0009,
+        "detached": -0.0093
+      }
+    },
+    {
+      "name": "Logistic \u2014 CO2 mean-imputed",
       "verdict": "NOT READY",
-      "conditions": "Do not deploy: CO2 is MNAR (38% missing, 40 properties) and adds no lift. Treat sensor failures as asset management, not a model input.",
-      "narrative": "Multimodal incl. CO2. AUROC 0.8427 \u2014 only +0.0015 vs the CO2-free Model A. CO2 is 38% missing (MNAR, 40 properties at 70-95% dropout) yet adds no predictive value, so it is a fragile dependency for no benefit. NOT READY: superseded by Model A. The CO2 sensor failures are an asset-management/repair issue, not a ranking input.",
+      "conditions": "Do not deploy: 38% MNAR CO2 mean-imputed for no lift.",
+      "narrative": "Logistic \u2014 CO2 mean-imputed \u2014 missingness: global-mean impute + flag. AUROC 0.8427, sensitivity 0.7738, PPV 0.5866 at threshold 0.51 (5-fold property-level CV, n=250). Flats AUROC 0.6785 vs terraced 0.8321. Naive mean-imputation of a 38%-MNAR channel for no lift \u2014 a fragile dependency. NOT READY.",
       "metrics": {
         "auroc": 0.8427,
         "auprc": 0.6839,
@@ -58,10 +106,34 @@
       }
     },
     {
-      "name": "Model C \u2014 Nowcast incl. lag_temp (leakage)",
+      "name": "Logistic \u2014 CO2 time-interpolated",
+      "verdict": "NOT READY",
+      "conditions": "Do not deploy: interpolation does not make CO2 informative.",
+      "narrative": "Logistic \u2014 CO2 time-interpolated \u2014 missingness: per-property interpolation + flag. AUROC 0.8439, sensitivity 0.7744, PPV 0.5879 at threshold 0.51 (5-fold property-level CV, n=250). Flats AUROC 0.6776 vs terraced 0.8346. Even proper per-property interpolation gives no lift, confirming CO2 is uninformative here. NOT READY.",
+      "metrics": {
+        "auroc": 0.8439,
+        "auprc": 0.6855,
+        "brier_score": 0.1612,
+        "sensitivity": 0.7744,
+        "specificity": 0.7725,
+        "ppv": 0.5879,
+        "npv": 0.8909,
+        "f1": 0.6684,
+        "threshold": 0.51,
+        "n_properties": 250
+      },
+      "subgroup_gaps": {
+        "flat": -0.157,
+        "terraced": 0.0,
+        "semi-detached": 0.0077,
+        "detached": 0.0047
+      }
+    },
+    {
+      "name": "Logistic \u2014 Nowcast + lag_temp (leakage)",
       "verdict": "NOT READY",
       "conditions": "Never deploy: lag_temp is target leakage. Always split by property and exclude lag_temp.",
-      "narrative": "Leakage exhibit. Adding lag_temp lifts AUROC to 0.9302 (+0.089 over Model A), and a row-level split lifts it further to 0.9316. But lag_temp is yesterday's indoor temperature \u2014 essentially yesterday's value of the target \u2014 so the gain is target leakage, not skill. NOT READY: do not deploy; always split by property and exclude lag_temp.",
+      "narrative": "Logistic \u2014 Nowcast + lag_temp (leakage) \u2014 missingness: n/a. AUROC 0.9302, sensitivity 0.8905, PPV 0.6661 at threshold 0.43 (5-fold property-level CV, n=250). Flats AUROC 0.8996 vs terraced 0.9205. Adding lag_temp inflates AUROC +0.089 (row-split 0.9316); lag_temp is ~yesterday's target = leakage. NOT READY.",
       "metrics": {
         "auroc": 0.9302,
         "auprc": 0.8414,
@@ -75,13 +147,13 @@
         "n_properties": 250
       },
       "subgroup_gaps": {
-        "flat": -0.1511,
+        "flat": -0.0209,
         "terraced": 0.0,
-        "semi-detached": 0.0095,
-        "detached": 0.0084
+        "semi-detached": 0.0054,
+        "detached": 0.0028
       }
     }
   ],
   "overall_verdict": "CONDITIONAL",
-  "overall_notes": "Deploy Model A (sensor-robust) for the winter upgrade ranking, with per-type ranking and a CO2 sensor-repair workstream for 40 properties. Reject Model B (MNAR CO2, no lift) and Model C (lag_temp leakage). Data quality CONDITIONAL, split integrity READY, equity CONDITIONAL."
+  "overall_notes": "Evaluated 6 models across algorithm and missing-data-handling choices. Deploy the sensor-robust Random Forest (AUROC 0.9129); the logistic baseline was much less reliable for flats (0.6784 vs 0.8642 for the forest), so model choice \u2014 not abandoning flats \u2014 closes most of the equity gap. Adding CO2 lifts AUROC by at most +0.003 within a fixed model, so its 38% MNAR gap is a data-integrity issue (repair 40 sensors), not a ranking bias. lag_temp is target leakage and is excluded. Data quality CONDITIONAL, split integrity READY, equity CONDITIONAL."
 }

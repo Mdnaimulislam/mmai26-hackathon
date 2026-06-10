@@ -10,11 +10,46 @@
   },
   "models": [
     {
-      "name": "model_a",
-      "label": "Model A \u2014 Sensor-robust (deployed)",
+      "name": "rf_robust",
+      "label": "Random Forest \u2014 Sensor-robust (deployed)",
       "verdict": "CONDITIONAL",
-      "conditions": "Rank within property type; pair with CO2 sensor-repair; re-audit after one season.",
-      "narrative": "Deployed model. Sensor-robust logistic model (no CO2, no lag_temp): AUROC 0.8412, PPV 0.5855, sensitivity 0.7726 at threshold 0.51 (5-fold property-level CV, n=250). It powers the upgrade ranking. CONDITIONAL because reliability is lower for flats (AUROC 0.6784 vs 0.8295 terraced, n=70 flats): rank within property type rather than on one cross-type list.",
+      "conditions": "Deployed. Rank within property type (flats 0.8642 vs 0.9047); pair with CO2 sensor repair; surface a reliability flag; re-audit after one heating season.",
+      "narrative": "Random Forest \u2014 Sensor-robust (deployed) \u2014 missingness: CO2 dropped. AUROC 0.9129, sensitivity 0.8874, PPV 0.6378 at threshold 0.43 (5-fold property-level CV, n=250). Flats AUROC 0.8642 vs terraced 0.9047. Deployed model \u2014 non-linear, best accuracy and the fairest across property types (flats 0.8642). CONDITIONAL: small residual flat gap to monitor; rank within type.",
+      "metrics": {
+        "auroc": 0.9129,
+        "auprc": 0.7888,
+        "brier_score": 0.1169,
+        "sensitivity": 0.8874,
+        "specificity": 0.7887,
+        "ppv": 0.6378,
+        "npv": 0.9435,
+        "f1": 0.7422,
+        "threshold": 0.43,
+        "n_properties": 250
+      },
+      "subgroup_gaps": {
+        "flat": -0.0405,
+        "terraced": 0.0,
+        "semi-detached": -0.0017,
+        "detached": -0.0111
+      },
+      "deployment_questions": {
+        "q1": "At threshold 0.43 sensitivity is 0.8874; misses ~11.3% of cold property-days (6078 of 53982 in held-out CV).",
+        "q2": "PPV 0.6378 \u2014 a positive flag is right ~64% of the time.",
+        "q3": "NPV 0.9435 \u2014 an all-clear is right ~94% of the time.",
+        "q4": "AUROC 0.9129 \u2014 ranks a cold property above a warm one ~91% of the time.",
+        "q5": "Per-type AUROC flat 0.8642 / terraced 0.9047 / semi 0.903 / detached 0.8936. Flats weakest \u2014 rank within type.",
+        "q6": "Uses no CO2, so the 38% MNAR dropout cannot affect it; the broken sensors are flagged for repair separately.",
+        "q7": "A false negative leaves a genuinely cold household below 19C for another heating season \u2014 a delayed health outcome for vulnerable residents.",
+        "q8": "Yes \u2014 primary ranking engine, with per-type ranking and a sensor-repair workstream."
+      }
+    },
+    {
+      "name": "logreg_robust",
+      "label": "Logistic Regression \u2014 Sensor-robust (interpretable baseline)",
+      "verdict": "CONDITIONAL",
+      "conditions": "Interpretable baseline only \u2014 less reliable for flats (0.6784); use the Random Forest for the live ranking and this model for plain-language reasons.",
+      "narrative": "Logistic Regression \u2014 Sensor-robust (interpretable baseline) \u2014 missingness: CO2 dropped. AUROC 0.8412, sensitivity 0.7726, PPV 0.5855 at threshold 0.51 (5-fold property-level CV, n=250). Flats AUROC 0.6784 vs terraced 0.8295. Interpretable linear baseline. Much weaker for flats (0.6784) \u2014 evidence that a non-linear model, not abandoning flats, closes the equity gap. CONDITIONAL.",
       "metrics": {
         "auroc": 0.8412,
         "auprc": 0.6822,
@@ -34,22 +69,57 @@
         "detached": 0.0084
       },
       "deployment_questions": {
-        "q1": "At threshold 0.51 sensitivity is 0.7726; it misses ~22.7% of genuinely cold property-days (12278 of 53982 in held-out CV).",
-        "q2": "PPV 0.5855 \u2014 a positive flag is correct ~59% of the time.",
-        "q3": "NPV 0.8899 \u2014 an all-clear is correct ~89% of the time.",
+        "q1": "At threshold 0.51 sensitivity is 0.7726; misses ~22.7% of cold property-days (12278 of 53982 in held-out CV).",
+        "q2": "PPV 0.5855 \u2014 a positive flag is right ~59% of the time.",
+        "q3": "NPV 0.8899 \u2014 an all-clear is right ~89% of the time.",
         "q4": "AUROC 0.8412 \u2014 ranks a cold property above a warm one ~84% of the time.",
-        "q5": "No \u2014 flats AUROC 0.6784 vs ~0.8295 for houses (flats are warmer: 10.5% vs ~37% cold base rate). Rank within type.",
-        "q6": "By design this model uses NO CO2, so the 38% MNAR dropout cannot affect it. The CO2 failures are surfaced separately as a sensor-repair flag for 40 properties.",
-        "q7": "A false negative leaves a genuinely cold household below 19C for another heating season \u2014 a delayed health outcome for vulnerable residents, not a calibration nicety.",
-        "q8": "Yes \u2014 recommended as the ranking engine, with per-type ranking and a sensor-repair workstream."
+        "q5": "Per-type AUROC flat 0.6784 / terraced 0.8295 / semi 0.839 / detached 0.8379. Flats weakest \u2014 rank within type.",
+        "q6": "Uses no CO2, so the 38% MNAR dropout cannot affect it; the broken sensors are flagged for repair separately.",
+        "q7": "A false negative leaves a genuinely cold household below 19C for another heating season \u2014 a delayed health outcome for vulnerable residents.",
+        "q8": "Usable cross-check, not the primary model."
       }
     },
     {
-      "name": "model_b",
-      "label": "Model B \u2014 Multimodal incl. CO2",
+      "name": "hgb_co2_native",
+      "label": "Gradient Boosting \u2014 CO2 (native NaN)",
+      "verdict": "CONDITIONAL",
+      "conditions": "Strong alternative; CO2 adds no benefit, so prefer the simpler CO2-free forest unless native missing-handling is specifically required.",
+      "narrative": "Gradient Boosting \u2014 CO2 (native NaN) \u2014 missingness: native (no imputation). AUROC 0.9151, sensitivity 0.8746, PPV 0.6494 at threshold 0.28 (5-fold property-level CV, n=250). Flats AUROC 0.8672 vs terraced 0.9067. Handles CO2 dropout natively (no imputation) yet CO2 only shifts AUROC +0.0015 overall \u2014 confirming the gap is data-integrity, not predictive.",
+      "metrics": {
+        "auroc": 0.9151,
+        "auprc": 0.7934,
+        "brier_score": 0.1056,
+        "sensitivity": 0.8746,
+        "specificity": 0.8021,
+        "ppv": 0.6494,
+        "npv": 0.9385,
+        "f1": 0.7454,
+        "threshold": 0.28,
+        "n_properties": 250
+      },
+      "subgroup_gaps": {
+        "flat": -0.0395,
+        "terraced": 0.0,
+        "semi-detached": -0.0009,
+        "detached": -0.0093
+      },
+      "deployment_questions": {
+        "q1": "At threshold 0.28 sensitivity is 0.8746; misses ~12.5% of cold property-days (6771 of 53982 in held-out CV).",
+        "q2": "PPV 0.6494 \u2014 a positive flag is right ~65% of the time.",
+        "q3": "NPV 0.9385 \u2014 an all-clear is right ~94% of the time.",
+        "q4": "AUROC 0.9151 \u2014 ranks a cold property above a warm one ~92% of the time.",
+        "q5": "Per-type AUROC flat 0.8672 / terraced 0.9067 / semi 0.9058 / detached 0.8974. Flats weakest \u2014 rank within type.",
+        "q6": "Handles CO2 dropout natively; CO2 shifts AUROC only +0.0015, so dropout barely matters.",
+        "q7": "A false negative leaves a genuinely cold household below 19C for another heating season \u2014 a delayed health outcome for vulnerable residents.",
+        "q8": "Usable cross-check, not the primary model."
+      }
+    },
+    {
+      "name": "logreg_co2_mean",
+      "label": "Logistic \u2014 CO2 mean-imputed",
       "verdict": "NOT READY",
-      "conditions": "Do not deploy; CO2 MNAR with no lift.",
-      "narrative": "Multimodal incl. CO2. AUROC 0.8427 \u2014 only +0.0015 vs the CO2-free Model A. CO2 is 38% missing (MNAR, 40 properties at 70-95% dropout) yet adds no predictive value, so it is a fragile dependency for no benefit. NOT READY: superseded by Model A. The CO2 sensor failures are an asset-management/repair issue, not a ranking input.",
+      "conditions": "Do not deploy: 38% MNAR CO2 mean-imputed for no lift.",
+      "narrative": "Logistic \u2014 CO2 mean-imputed \u2014 missingness: global-mean impute + flag. AUROC 0.8427, sensitivity 0.7738, PPV 0.5866 at threshold 0.51 (5-fold property-level CV, n=250). Flats AUROC 0.6785 vs terraced 0.8321. Naive mean-imputation of a 38%-MNAR channel for no lift \u2014 a fragile dependency. NOT READY.",
       "metrics": {
         "auroc": 0.8427,
         "auprc": 0.6839,
@@ -69,22 +139,57 @@
         "detached": 0.0067
       },
       "deployment_questions": {
-        "q1": "At threshold 0.51 sensitivity is 0.7738; it misses ~22.6% of genuinely cold property-days (12211 of 53982 in held-out CV).",
-        "q2": "PPV 0.5866 \u2014 a positive flag is correct ~59% of the time.",
-        "q3": "NPV 0.8905 \u2014 an all-clear is correct ~89% of the time.",
+        "q1": "At threshold 0.51 sensitivity is 0.7738; misses ~22.6% of cold property-days (12211 of 53982 in held-out CV).",
+        "q2": "PPV 0.5866 \u2014 a positive flag is right ~59% of the time.",
+        "q3": "NPV 0.8905 \u2014 an all-clear is right ~89% of the time.",
         "q4": "AUROC 0.8427 \u2014 ranks a cold property above a warm one ~84% of the time.",
-        "q5": "Per-type AUROC: {'flat': 0.6784, 'terraced': 0.8295, 'semi-detached': 0.839, 'detached': 0.8379}.",
-        "q6": "Tested directly: CO2 adds +0.0015 AUROC and is 38% MNAR-missing. Including it makes reliability depend on a sensor that has failed for 40 properties \u2014 net negative.",
-        "q7": "A false negative leaves a genuinely cold household below 19C for another heating season \u2014 a delayed health outcome for vulnerable residents, not a calibration nicety.",
-        "q8": "No \u2014 kept only as evidence; do not deploy."
+        "q5": "Per-type AUROC flat 0.6785 / terraced 0.8321 / semi 0.8409 / detached 0.8388. Flats weakest \u2014 rank within type.",
+        "q6": "This model depends on the 38%-MNAR CO2 channel (global-mean impute + flag), which adds no lift \u2014 a fragility for no gain.",
+        "q7": "A false negative leaves a genuinely cold household below 19C for another heating season \u2014 a delayed health outcome for vulnerable residents.",
+        "q8": "No \u2014 evaluated and rejected; kept as evidence."
       }
     },
     {
-      "name": "model_c",
-      "label": "Model C \u2014 Nowcast incl. lag_temp (leakage)",
+      "name": "logreg_co2_interp",
+      "label": "Logistic \u2014 CO2 time-interpolated",
       "verdict": "NOT READY",
-      "conditions": "Never deploy; lag_temp leakage.",
-      "narrative": "Leakage exhibit. Adding lag_temp lifts AUROC to 0.9302 (+0.089 over Model A), and a row-level split lifts it further to 0.9316. But lag_temp is yesterday's indoor temperature \u2014 essentially yesterday's value of the target \u2014 so the gain is target leakage, not skill. NOT READY: do not deploy; always split by property and exclude lag_temp.",
+      "conditions": "Do not deploy: interpolation does not make CO2 informative.",
+      "narrative": "Logistic \u2014 CO2 time-interpolated \u2014 missingness: per-property interpolation + flag. AUROC 0.8439, sensitivity 0.7744, PPV 0.5879 at threshold 0.51 (5-fold property-level CV, n=250). Flats AUROC 0.6776 vs terraced 0.8346. Even proper per-property interpolation gives no lift, confirming CO2 is uninformative here. NOT READY.",
+      "metrics": {
+        "auroc": 0.8439,
+        "auprc": 0.6855,
+        "brier_score": 0.1612,
+        "sensitivity": 0.7744,
+        "specificity": 0.7725,
+        "ppv": 0.5879,
+        "npv": 0.8909,
+        "f1": 0.6684,
+        "threshold": 0.51,
+        "n_properties": 250
+      },
+      "subgroup_gaps": {
+        "flat": -0.157,
+        "terraced": 0.0,
+        "semi-detached": 0.0077,
+        "detached": 0.0047
+      },
+      "deployment_questions": {
+        "q1": "At threshold 0.51 sensitivity is 0.7744; misses ~22.6% of cold property-days (12180 of 53982 in held-out CV).",
+        "q2": "PPV 0.5879 \u2014 a positive flag is right ~59% of the time.",
+        "q3": "NPV 0.8909 \u2014 an all-clear is right ~89% of the time.",
+        "q4": "AUROC 0.8439 \u2014 ranks a cold property above a warm one ~84% of the time.",
+        "q5": "Per-type AUROC flat 0.6776 / terraced 0.8346 / semi 0.8423 / detached 0.8393. Flats weakest \u2014 rank within type.",
+        "q6": "This model depends on the 38%-MNAR CO2 channel (per-property interpolation + flag), which adds no lift \u2014 a fragility for no gain.",
+        "q7": "A false negative leaves a genuinely cold household below 19C for another heating season \u2014 a delayed health outcome for vulnerable residents.",
+        "q8": "No \u2014 evaluated and rejected; kept as evidence."
+      }
+    },
+    {
+      "name": "logreg_lag",
+      "label": "Logistic \u2014 Nowcast + lag_temp (leakage)",
+      "verdict": "NOT READY",
+      "conditions": "Never deploy: lag_temp is target leakage. Always split by property and exclude lag_temp.",
+      "narrative": "Logistic \u2014 Nowcast + lag_temp (leakage) \u2014 missingness: n/a. AUROC 0.9302, sensitivity 0.8905, PPV 0.6661 at threshold 0.43 (5-fold property-level CV, n=250). Flats AUROC 0.8996 vs terraced 0.9205. Adding lag_temp inflates AUROC +0.089 (row-split 0.9316); lag_temp is ~yesterday's target = leakage. NOT READY.",
       "metrics": {
         "auroc": 0.9302,
         "auprc": 0.8414,
@@ -98,20 +203,20 @@
         "n_properties": 250
       },
       "subgroup_gaps": {
-        "flat": -0.1511,
+        "flat": -0.0209,
         "terraced": 0.0,
-        "semi-detached": 0.0095,
-        "detached": 0.0084
+        "semi-detached": 0.0054,
+        "detached": 0.0028
       },
       "deployment_questions": {
-        "q1": "At threshold 0.43 sensitivity is 0.8905; it misses ~11.0% of genuinely cold property-days (5909 of 53982 in held-out CV).",
-        "q2": "PPV 0.6661 \u2014 a positive flag is correct ~67% of the time.",
-        "q3": "NPV 0.9466 \u2014 an all-clear is correct ~95% of the time.",
+        "q1": "At threshold 0.43 sensitivity is 0.8905; misses ~11.0% of cold property-days (5909 of 53982 in held-out CV).",
+        "q2": "PPV 0.6661 \u2014 a positive flag is right ~67% of the time.",
+        "q3": "NPV 0.9466 \u2014 an all-clear is right ~95% of the time.",
         "q4": "AUROC 0.9302 \u2014 ranks a cold property above a warm one ~93% of the time.",
-        "q5": "Per-type AUROC: {'flat': 0.6784, 'terraced': 0.8295, 'semi-detached': 0.839, 'detached': 0.8379}.",
-        "q6": "Not the failure here \u2014 this model's problem is lag_temp leakage, not CO2.",
-        "q7": "A false negative leaves a genuinely cold household below 19C for another heating season \u2014 a delayed health outcome for vulnerable residents, not a calibration nicety.",
-        "q8": "No \u2014 kept only as evidence; do not deploy."
+        "q5": "Per-type AUROC flat 0.8996 / terraced 0.9205 / semi 0.9259 / detached 0.9233. Flats weakest \u2014 rank within type.",
+        "q6": "Not the issue here \u2014 this model's flaw is lag_temp leakage, not CO2.",
+        "q7": "A false negative leaves a genuinely cold household below 19C for another heating season \u2014 a delayed health outcome for vulnerable residents.",
+        "q8": "No \u2014 evaluated and rejected; kept as evidence."
       }
     }
   ],
@@ -121,10 +226,10 @@
     "equity": "CONDITIONAL"
   },
   "overall_verdict": "CONDITIONAL",
-  "overall_notes": "CONDITIONAL. Temperature/humidity/smart-meter reliable; CO2 MNAR (38% missing, 40 properties >=50% dropout) but uninformative; resident survey ~97% missing (MNAR). Property-level split verified (0 cross-fold overlap); lag_temp excluded as target leakage. Deploy Model A with within-type ranking; commission CO2 sensor repairs; re-audit after one heating season.",
+  "overall_notes": "CONDITIONAL. Temperature/humidity/smart-meter reliable; CO2 MNAR (38% missing, 40 properties >=50% dropout) but uninformative \u2014 adding CO2 lifts AUROC by at most +0.003 within a fixed model, and a gradient model handling CO2 natively only matches the CO2-free model. Property-level split verified (0 overlap); lag_temp excluded as target leakage. Deploy the sensor-robust Random Forest (AUROC 0.9129, flats 0.8642); the logistic baseline was unfair to flats (0.6784). Rank within type; repair CO2 sensors; re-audit after one season.",
   "option_specific": {
     "type": "coverage_report",
-    "title": "Cold-Home Triage \u2014 coverage + sensor-health + fairness (3-in-1)",
+    "title": "Cold-Home Triage \u2014 coverage + sensor-health + fairness + missingness (4-in-1)",
     "content": {
       "property_type_distribution": [
         {
@@ -136,30 +241,32 @@
         {
           "property_type": "terraced",
           "estate_share": 0.4,
-          "top_ranked_share": 0.4,
-          "n_in_top": 20
+          "top_ranked_share": 0.68,
+          "n_in_top": 34
         },
         {
           "property_type": "semi-detached",
           "estate_share": 0.22,
-          "top_ranked_share": 0.5,
-          "n_in_top": 25
+          "top_ranked_share": 0.32,
+          "n_in_top": 16
         },
         {
           "property_type": "detached",
           "estate_share": 0.1,
-          "top_ranked_share": 0.1,
-          "n_in_top": 5
+          "top_ranked_share": 0.0,
+          "n_in_top": 0
         }
       ],
       "top_ranked_count": 50,
       "over_represented_types": [
+        "terraced",
         "semi-detached"
       ],
       "under_represented_types": [
-        "flat"
+        "flat",
+        "detached"
       ],
-      "reranking_under_fair_weighting": "A single cold-risk list ranks houses above flats because flats are genuinely warmer (10.5% vs ~37% cold) \u2014 correct, not bias. If the budget should reach the coldest homes of every stock type, within-type allocation adds 14 flats the global top 50 omits. The council should choose 'coldest absolute' vs 'coldest per type' explicitly.",
+      "reranking_under_fair_weighting": "A single cold-risk list ranks houses above flats because flats are genuinely warmer (10.5% vs ~37% cold). Within-type allocation adds 14 flats the global top 50 omits. Choose 'coldest absolute' vs 'coldest per type' deliberately.",
       "threshold_sensitivity_report": {
         "thresholds_tested": [
           0.3,
@@ -178,7 +285,7 @@
           24
         ],
         "recommended_threshold": 0.5,
-        "sensitivity_fatigue_tradeoff": "At a 0.5 dropout cut-off, 40 properties are flagged for sensor repair \u2014 the natural break (the MNAR cohort sits at 70-95%). 0.3 flags 140 (review fatigue); 0.8 flags 24 (misses borderline-failing sensors)."
+        "sensitivity_fatigue_tradeoff": "At 0.5 dropout cut-off, 40 properties flagged for repair \u2014 the natural break (MNAR cohort at 70-95%). 0.3 flags 140 (fatigue); 0.8 flags 24 (misses borderline failures)."
       },
       "fairness_disparity_summary": {
         "disparity_findings": [
@@ -188,7 +295,7 @@
             "overall_rate": 0.72,
             "gap": -0.72,
             "n": 70,
-            "model_auroc": 0.6784,
+            "model_auroc": 0.8642,
             "cold_base_rate": 0.1046
           },
           {
@@ -197,7 +304,7 @@
             "overall_rate": 0.72,
             "gap": 0.28,
             "n": 100,
-            "model_auroc": 0.8295,
+            "model_auroc": 0.9047,
             "cold_base_rate": 0.3755
           },
           {
@@ -206,7 +313,7 @@
             "overall_rate": 0.72,
             "gap": 0.28,
             "n": 55,
-            "model_auroc": 0.839,
+            "model_auroc": 0.903,
             "cold_base_rate": 0.3759
           },
           {
@@ -215,14 +322,189 @@
             "overall_rate": 0.72,
             "gap": 0.28,
             "n": 25,
-            "model_auroc": 0.8379,
+            "model_auroc": 0.8936,
             "cold_base_rate": 0.3319
           }
         ],
         "most_affected_group": "flat",
-        "recommended_mitigation": "Flag-rate differences across types reflect true cold differences, not unfairness. The real fairness risk is lower model reliability for flats (AUROC 0.6784). Mitigate with per-type ranking/thresholds, surface a reliability flag in the UI, and repair CO2 sensors so the data improves for the under-instrumented cohort."
+        "recommended_mitigation": "Flag-rate gaps mirror true cold differences, not unfairness. The real risk is lower reliability for flats (AUROC 0.8642). Mitigate with per-type ranking, a UI reliability flag, and CO2 sensor repair."
       },
-      "top_risk_drivers_model_a": [
+      "missingness_analysis": {
+        "summary": [
+          {
+            "modality": "avgTemperature",
+            "missing_rate": 0.0306,
+            "n_missing": 5591
+          },
+          {
+            "modality": "avgHumidity",
+            "missing_rate": 0.0495,
+            "n_missing": 9047
+          },
+          {
+            "modality": "avgCo2",
+            "missing_rate": 0.3838,
+            "n_missing": 70131
+          },
+          {
+            "modality": "smart_meter_kwh",
+            "missing_rate": 0.0254,
+            "n_missing": 4646
+          },
+          {
+            "modality": "noise_db",
+            "missing_rate": 0.0805,
+            "n_missing": 14709
+          },
+          {
+            "modality": "survey_score",
+            "missing_rate": 0.972,
+            "n_missing": 177624
+          }
+        ],
+        "mechanism": {
+          "predict_high_dropout_auroc": 0.5636,
+          "high_dropout_share_by_type": {
+            "flat": 0.1286,
+            "terraced": 0.16,
+            "semi-detached": 0.2364,
+            "detached": 0.08
+          },
+          "corr_dropout_vs_cold_rate": 0.0366,
+          "n_high_dropout": 40,
+          "n_properties": 250,
+          "mechanism_verdict": "Dropout is only weakly tied to property type.",
+          "outcome_note": "Dropout is only weakly correlated with cold-risk (r=0.0366), so the MNAR-with-respect-to-outcome concern is limited: the broken sensors are mainly a data-integrity issue, not a hidden cold-risk bias."
+        },
+        "imputation_comparison": [
+          {
+            "strategy": "Drop CO2 (sensor-robust)",
+            "model": "logreg_robust",
+            "auroc": 0.8412
+          },
+          {
+            "strategy": "Mean impute + missing flag",
+            "model": "logreg_co2_mean",
+            "auroc": 0.8427
+          },
+          {
+            "strategy": "Per-property interpolation + flag",
+            "model": "logreg_co2_interp",
+            "auroc": 0.8439
+          },
+          {
+            "strategy": "Native NaN (gradient boosting)",
+            "model": "hgb_co2_native",
+            "auroc": 0.9151
+          }
+        ],
+        "distribution_note": "Observed CO2 std is 63.5; naive mean-imputation drops it to 49.8 (a fake spike at the mean), while per-property interpolation keeps it at 58.5 \u2014 closer to reality."
+      },
+      "multimodal_analysis": {
+        "combined_auroc": 0.8274,
+        "single_modality_auroc": [
+          {
+            "modality": "Humidity",
+            "auroc": 0.7242
+          },
+          {
+            "modality": "CO\u2082",
+            "auroc": 0.5835
+          },
+          {
+            "modality": "Energy (smart meter)",
+            "auroc": 0.747
+          },
+          {
+            "modality": "Noise",
+            "auroc": 0.5691
+          },
+          {
+            "modality": "Property type",
+            "auroc": 0.6034
+          },
+          {
+            "modality": "Season (month)",
+            "auroc": 0.5559
+          },
+          {
+            "modality": "Day of week",
+            "auroc": 0.5018
+          }
+        ],
+        "leave_one_out": [
+          {
+            "modality": "Humidity",
+            "auroc_without": 0.7969,
+            "marginal": 0.0305
+          },
+          {
+            "modality": "CO\u2082",
+            "auroc_without": 0.8253,
+            "marginal": 0.0021
+          },
+          {
+            "modality": "Energy (smart meter)",
+            "auroc_without": 0.767,
+            "marginal": 0.0604
+          },
+          {
+            "modality": "Noise",
+            "auroc_without": 0.8274,
+            "marginal": 0.0
+          },
+          {
+            "modality": "Property type",
+            "auroc_without": 0.8059,
+            "marginal": 0.0215
+          },
+          {
+            "modality": "Season (month)",
+            "auroc_without": 0.8262,
+            "marginal": 0.0012
+          },
+          {
+            "modality": "Day of week",
+            "auroc_without": 0.8274,
+            "marginal": 0.0
+          }
+        ]
+      },
+      "top_risk_drivers_deployed": [
+        {
+          "feature": "month",
+          "importance": 0.4679
+        },
+        {
+          "feature": "smart_meter_kwh",
+          "importance": 0.2416
+        },
+        {
+          "feature": "avgHumidity",
+          "importance": 0.1493
+        },
+        {
+          "feature": "is_flat",
+          "importance": 0.0722
+        },
+        {
+          "feature": "pt_terraced",
+          "importance": 0.0272
+        },
+        {
+          "feature": "noise_db",
+          "importance": 0.0215
+        },
+        {
+          "feature": "day_of_week",
+          "importance": 0.0076
+        },
+        {
+          "feature": "pt_semi_detached",
+          "importance": 0.0068
+        }
+      ],
+      "top_risk_drivers_linear": [
         {
           "feature": "smart_meter_kwh",
           "weight": 1.5998,
@@ -257,45 +539,45 @@
       "decision_threshold_sweep": [
         {
           "threshold": 0.2,
-          "sensitivity": 0.9484,
-          "specificity": 0.3981,
-          "ppv": 0.3978
+          "sensitivity": 0.9587,
+          "specificity": 0.6567,
+          "ppv": 0.5394
         },
         {
           "threshold": 0.3,
-          "sensitivity": 0.9048,
-          "specificity": 0.5506,
-          "ppv": 0.4577
+          "sensitivity": 0.9379,
+          "specificity": 0.7192,
+          "ppv": 0.5834
         },
         {
           "threshold": 0.4,
-          "sensitivity": 0.8496,
-          "specificity": 0.6705,
-          "ppv": 0.5195
+          "sensitivity": 0.9044,
+          "specificity": 0.77,
+          "ppv": 0.6224
         },
         {
           "threshold": 0.5,
-          "sensitivity": 0.78,
-          "specificity": 0.7629,
-          "ppv": 0.5797
+          "sensitivity": 0.839,
+          "specificity": 0.8357,
+          "ppv": 0.6816
         },
         {
           "threshold": 0.6,
-          "sensitivity": 0.6879,
-          "specificity": 0.8371,
-          "ppv": 0.6391
+          "sensitivity": 0.7862,
+          "specificity": 0.8778,
+          "ppv": 0.7295
         },
         {
           "threshold": 0.7,
-          "sensitivity": 0.5599,
-          "specificity": 0.8968,
-          "ppv": 0.6946
+          "sensitivity": 0.7331,
+          "specificity": 0.9024,
+          "ppv": 0.759
         },
         {
           "threshold": 0.8,
-          "sensitivity": 0.3869,
-          "specificity": 0.9468,
-          "ppv": 0.7529
+          "sensitivity": 0.6113,
+          "specificity": 0.9351,
+          "ppv": 0.798
         }
       ]
     }

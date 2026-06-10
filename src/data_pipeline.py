@@ -38,15 +38,19 @@ FEATURES_ROBUST = [
     "pt_detached",
 ]
 
-# Model B — MULTIMODAL incl. CO2: Model A plus the MNAR CO2 channel. Evidence shows
-# CO2 adds ~0 lift (+0.0015 AUROC) while introducing a 38%-missing dependency.
-FEATURES_CO2 = FEATURES_ROBUST + ["co2_imputed", "co2_missing"]
+# CO2 channel under three missing-data strategies (the missingness comparison):
+FEATURES_CO2_MEAN = FEATURES_ROBUST + ["co2_imputed", "co2_missing"]    # naive mean impute
+FEATURES_CO2_INTERP = FEATURES_ROBUST + ["co2_interp", "co2_missing"]   # per-property interpolation
+FEATURES_CO2_RAW = FEATURES_ROBUST + ["avgCo2", "co2_missing"]          # raw NaN -> native handling (HGB)
+FEATURES_CO2 = FEATURES_CO2_MEAN                                         # back-compat default
 
 # Model C — NOWCAST incl. lag_temp: the target-leakage exhibit. Do not deploy.
 FEATURES_LAG = FEATURES_ROBUST + ["lag_temp"]
 
 # Every engineered feature any model can use (for the modelling frame).
-ALL_FEATURES = sorted(set(FEATURES_ROBUST + FEATURES_CO2 + FEATURES_LAG))
+ALL_FEATURES = sorted(set(
+    FEATURES_ROBUST + FEATURES_CO2_MEAN + FEATURES_CO2_INTERP + FEATURES_CO2_RAW + FEATURES_LAG
+))
 
 # The default feature set the demo app loads = the deployable model (Model A).
 FEATURES = FEATURES_ROBUST
@@ -109,9 +113,16 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     # Previous-day indoor temperature, per property (NaN on each property's day 1).
     df["lag_temp"] = df.groupby("reference")["avgTemperature"].shift(1)
 
-    # CO2 channel: missingness flag + simple mean-imputation baseline.
+    # CO2 channel under three missing-data strategies:
+    #  * co2_missing  — the MNAR indicator
+    #  * co2_imputed  — naive global-mean imputation (collapses variance)
+    #  * co2_interp   — per-property time interpolation (domain-appropriate), mean for all-gap props
     df["co2_missing"] = df["avgCo2"].isna().astype(int)
     df["co2_imputed"] = df["avgCo2"].fillna(df["avgCo2"].mean())
+    df["co2_interp"] = df.groupby("reference")["avgCo2"].transform(
+        lambda s: s.interpolate(limit_direction="both")
+    )
+    df["co2_interp"] = df["co2_interp"].fillna(df["avgCo2"].mean())
 
     # Property-type one-hots (flat is the reference level, captured by is_flat).
     pt = df["property_type"].astype(str)
